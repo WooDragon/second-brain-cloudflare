@@ -64,7 +64,9 @@ export const DEFAULTS = {
 
   // ── Models (src/lib/ai.ts) ──
   LLM_MODEL: "@cf/meta/llama-4-scout-17b-16e-instruct",
-  EMBEDDING_MODEL: "@cf/baai/bge-small-en-v1.5",
+  // DOWNSTREAM(model): must stay equal to src/constants.ts EMBEDDING_MODEL —
+  // test/unit/config-parity.test.ts asserts the two are the same value.
+  EMBEDDING_MODEL: "@cf/qwen/qwen3-embedding-0.6b",
 } as const;
 
 // DEFAULTS is `as const` so the shipped values are pinned and a typo shows up

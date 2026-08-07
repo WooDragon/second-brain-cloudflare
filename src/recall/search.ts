@@ -132,7 +132,10 @@ export async function recallEntries(
 
   const tokens = tokenizeQuery(embedQuery);
   const [values, queryTags] = await Promise.all([
-    embed(embedQuery, env, cfg),
+    // DOWNSTREAM(model): only embed call site in the repo that passes "query" —
+    // this is the search/recall path. All 5 write-side call sites keep the
+    // default "document" mode untouched.
+    embed(embedQuery, env, cfg, "query"),
     inferQueryTags(embedQuery, env, cfg, ctx),
   ]);
 

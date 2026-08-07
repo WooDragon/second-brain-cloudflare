@@ -115,7 +115,11 @@ function vectorizeHealthBanner(health) {
   const name = health.vectorize.indexName || 'second-brain-vectors';
   return {
     title: 'Semantic search is disabled. The Vectorize index "' + name + '" was not found.',
-    command: 'npx wrangler vectorize create ' + name + ' --dimensions=384 --metric=cosine',
+    // DOWNSTREAM(model): dimension must match src/constants.ts EMBEDDING_DIMS. This
+    // file is plain browser JS and cannot import the TS constant across the build
+    // boundary, so the value is duplicated here as a literal; test/ui/utils.test.ts
+    // asserts it against the real EMBEDDING_DIMS import to keep the two in lockstep.
+    command: 'npx wrangler vectorize create ' + name + ' --dimensions=1024 --metric=cosine',
     gui: 'Or grant the Workers Builds API token the account-level Vectorize Edit permission in the Cloudflare dashboard (My Profile, API Tokens), then redeploy so the build creates the index automatically.'
   };
 }

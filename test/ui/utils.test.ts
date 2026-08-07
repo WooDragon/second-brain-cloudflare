@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { EMBEDDING_DIMS } from "../../src/constants";
 
 const { parseRecallResult, escHtml, escAttr, toDateStr, vectorizeHealthBanner, vectorizeBannerHtml, syncVectorizeBanner } = require("../../public/utils.js");
 
@@ -285,8 +286,13 @@ describe("vectorizeHealthBanner", () => {
     const b = vectorizeHealthBanner({ ok: false, vectorize: { ok: false, indexName: "second-brain-vectors", error: "index not found" } });
     expect(b).not.toBeNull();
     expect(b.title).toContain("second-brain-vectors");
-    expect(b.command).toBe("npx wrangler vectorize create second-brain-vectors --dimensions=384 --metric=cosine");
+    expect(b.command).toBe("npx wrangler vectorize create second-brain-vectors --dimensions=1024 --metric=cosine");
     expect(b.gui).toContain("Vectorize Edit");
+  });
+
+  it("keeps the fix command's dimension literal in lockstep with EMBEDDING_DIMS", () => {
+    const b = vectorizeHealthBanner({ ok: false, vectorize: { ok: false, indexName: "second-brain-vectors" } });
+    expect(b.command).toContain("--dimensions=" + EMBEDDING_DIMS);
   });
 
   it("falls back to the default index name when indexName is absent", () => {

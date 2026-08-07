@@ -3,6 +3,7 @@ import { derivePattern } from "../../src/compression/pattern";
 import { makeTestDb, makeTestEnv } from "../helpers/make-env";
 import { D1Mock } from "../helpers/d1-mock";
 import type { Env } from "../../src/env";
+import { EMBEDDING_MODEL, EMBEDDING_DIMS } from "../../src/constants";
 
 // SSE stream helper — used by classifyEntry (streaming) inside captureEntry
 function makeSseStream(response: string) {
@@ -22,8 +23,8 @@ function makeSseStream(response: string) {
 function makePatternAI(patternResponse: string | null = "You tend to work in short focused bursts") {
   return {
     run: vi.fn().mockImplementation(async (_model: string, opts: any) => {
-      if (_model === "@cf/baai/bge-small-en-v1.5")
-        return { data: [new Array(384).fill(0.1)] };
+      if (_model === EMBEDDING_MODEL)
+        return { data: [new Array(EMBEDDING_DIMS).fill(0.1)] };
       if (opts?.stream)
         return makeSseStream("3");
       if (patternResponse === null)
@@ -81,7 +82,7 @@ describe("derivePattern()", () => {
     await derivePattern(makeRows(25), env, ctx);
     // First non-embedding call is the pattern derivation call
     const calls = (env.AI.run as ReturnType<typeof vi.fn>).mock.calls;
-    const llmCall = calls.find((call: any[]) => call[0] !== "@cf/baai/bge-small-en-v1.5");
+    const llmCall = calls.find((call: any[]) => call[0] !== EMBEDDING_MODEL);
     const prompt: string = llmCall![1].messages[0].content;
     expect(prompt).toContain("[20]");
     expect(prompt).not.toContain("[21]");
@@ -92,7 +93,7 @@ describe("derivePattern()", () => {
     const { ctx } = makeCtx();
     await derivePattern([...makeRows(9), { id: "long", content: long }], env, ctx);
     const calls = (env.AI.run as ReturnType<typeof vi.fn>).mock.calls;
-    const llmCall = calls.find((call: any[]) => call[0] !== "@cf/baai/bge-small-en-v1.5");
+    const llmCall = calls.find((call: any[]) => call[0] !== EMBEDDING_MODEL);
     const prompt: string = llmCall![1].messages[0].content;
     expect(prompt).toContain("x".repeat(300));
     expect(prompt).not.toContain("x".repeat(301));
@@ -110,7 +111,7 @@ describe("derivePattern()", () => {
     const { ctx } = makeCtx();
     await derivePattern(allRows, env, ctx);
     const calls = (env.AI.run as ReturnType<typeof vi.fn>).mock.calls;
-    const llmCall = calls.find((call: any[]) => call[0] !== "@cf/baai/bge-small-en-v1.5");
+    const llmCall = calls.find((call: any[]) => call[0] !== EMBEDDING_MODEL);
     const prompt: string = llmCall![1].messages[0].content;
     for (const r of rows) expect(prompt).toContain(r.content);
   });
@@ -119,7 +120,7 @@ describe("derivePattern()", () => {
     const { ctx } = makeCtx();
     await derivePattern(makeRows(10), env, ctx);
     const calls = (env.AI.run as ReturnType<typeof vi.fn>).mock.calls;
-    const llmCall = calls.find((call: any[]) => call[0] !== "@cf/baai/bge-small-en-v1.5");
+    const llmCall = calls.find((call: any[]) => call[0] !== EMBEDDING_MODEL);
     expect(llmCall![1].stream).toBeUndefined();
     expect(llmCall![1].max_tokens).toBeDefined();
   });
@@ -230,8 +231,8 @@ describe("derivePattern()", () => {
     env = makeTestEnv(db, {
       AI: {
         run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-          if (model === "@cf/baai/bge-small-en-v1.5")
-            return { data: [new Array(384).fill(0.1)] };
+          if (model === EMBEDDING_MODEL)
+            return { data: [new Array(EMBEDDING_DIMS).fill(0.1)] };
           if (opts?.stream) return makeSseStream("3");
           return { choices: [{ message: { content: pattern } }] };
         }),
@@ -248,8 +249,8 @@ describe("derivePattern()", () => {
     env = makeTestEnv(db, {
       AI: {
         run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-          if (model === "@cf/baai/bge-small-en-v1.5")
-            return { data: [new Array(384).fill(0.1)] };
+          if (model === EMBEDDING_MODEL)
+            return { data: [new Array(EMBEDDING_DIMS).fill(0.1)] };
           if (opts?.stream) return makeSseStream("3");
           return { choices: [{ message: { content: fromChoices } }], response: "You tend to use voice notes." };
         }),

@@ -1,6 +1,7 @@
 import { vi } from "vitest";
 import { D1Mock } from "./d1-mock";
 import type { Env } from "../../src/env";
+import { EMBEDDING_MODEL, EMBEDDING_DIMS } from "../../src/constants";
 
 export function makeVectorizeMock(overrides: Partial<VectorizeIndex> = {}): VectorizeIndex {
   return {
@@ -17,8 +18,13 @@ export function makeVectorizeMock(overrides: Partial<VectorizeIndex> = {}): Vect
 export function makeAIMock(): Ai {
   return {
     run: vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5")
-        return { data: [new Array(384).fill(0.1)] };
+      // DOWNSTREAM(model): matches the new default embedding model and its 1024
+      // dims. Still returns one constant vector for every input — many existing
+      // tests depend on that stability. Asymmetric query/document behavior is
+      // asserted separately with an inline local mock (see
+      // test/integration/embedding-migration.test.ts's makeAI() for the pattern).
+      if (model === EMBEDDING_MODEL)
+        return { data: [new Array(EMBEDDING_DIMS).fill(0.1)] };
       return new ReadableStream({
         start(c) {
           c.enqueue(new TextEncoder().encode('data: {"response":"3"}\n\n'));

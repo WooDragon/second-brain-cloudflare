@@ -11,6 +11,7 @@ import { readStreamText } from "../lib/ai";
 import { extractHashtags } from "../text/hashtags";
 import { isTopicTag } from "../compression/eligibility";
 import { getTagVocabulary } from "../tags/vocabulary";
+import { trimNonWord } from "../text/tokenize";
 
 /**
  * `ctx` is optional only so this stays callable from tests and any future internal
@@ -78,7 +79,14 @@ export interface DistilledQuery {
 
 export async function distillToRareTerms(query: string, env: Env, config: Readonly<Config> = DEFAULTS): Promise<DistilledQuery> {
   const words = query.split(/\s+/).filter(Boolean);
-  const norm = (w: string) => w.toLowerCase().replace(/^[^\w#.]+|[^\w#.]+$/g, "");
+  // DOWNSTREAM(cjk): norm() now reuses tokenize.ts's shared edge-trim (CJK-aware)
+  // instead of the ASCII-only `^[^\w#.]+|[^\w#.]+$`, so a CJK word survives here
+  // as a real word rather than being stripped to "". Deliberately NOT split into
+  // bigrams like tokenizeQuery does — this function's output is natural-language
+  // text fed straight into the embed call, and chopping it into bigrams would destroy
+  // the semantics the embedding model needs. Do not "unify" this with the
+  // keyword-arm tokenizer; the two have different jobs.
+  const norm = (w: string) => trimNonWord(w.toLowerCase());
   const content = words.filter(w => {
     const n = norm(w);
     return n.length >= KEYWORD_MIN_TOKEN_LEN && !KEYWORD_STOPWORDS.has(n);

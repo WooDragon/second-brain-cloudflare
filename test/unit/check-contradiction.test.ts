@@ -3,6 +3,7 @@ import { checkDuplicateAndContradiction } from "../../src/capture/duplicate";
 import type { MergeAction } from "../../src/capture/duplicate";
 import { makeTestDb, makeVectorizeMock, makeKVMock } from "../helpers/make-env";
 import type { Env } from "../../src/env";
+import { EMBEDDING_MODEL, EMBEDDING_DIMS } from "../../src/constants";
 
 function makeEnv(aiResponse: string, vectorMatches: any[] = [], dbEntries: any[] = []): Env {
   const db = makeTestDb();
@@ -14,8 +15,8 @@ function makeEnv(aiResponse: string, vectorMatches: any[] = [], dbEntries: any[]
     }),
     AI: {
       run: vi.fn().mockImplementation(async (model: string) => {
-        if (model === "@cf/baai/bge-small-en-v1.5")
-          return { data: [new Array(384).fill(0.1)] };
+        if (model === EMBEDDING_MODEL)
+          return { data: [new Array(EMBEDDING_DIMS).fill(0.1)] };
         return new ReadableStream({
           start(c) {
             c.enqueue(new TextEncoder().encode(`data: {"response":${JSON.stringify(aiResponse)}}\n\n`));
@@ -98,7 +99,7 @@ describe("checkDuplicateAndContradiction()", () => {
       }),
       AI: {
         run: vi.fn().mockImplementation(async (model: string) => {
-          if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+          if (model === EMBEDDING_MODEL) return { data: [new Array(EMBEDDING_DIMS).fill(0.1)] };
           throw new Error("AI service unavailable");
         }),
       } as unknown as Ai,
@@ -182,7 +183,7 @@ describe("checkDuplicateAndContradiction()", () => {
       }),
       AI: {
         run: vi.fn().mockImplementation(async (model: string) => {
-          if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+          if (model === EMBEDDING_MODEL) return { data: [new Array(EMBEDDING_DIMS).fill(0.1)] };
           throw new Error("AI unavailable");
         }),
       } as unknown as Ai,

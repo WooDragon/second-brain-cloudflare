@@ -4,6 +4,7 @@ import { makeTestDb, makeTestEnv, makeVectorizeMock } from "../helpers/make-env"
 import { req } from "../helpers/make-request";
 import type { Env } from "../../src/env";
 import { D1Mock } from "../helpers/d1-mock";
+import { EMBEDDING_DIMS } from "../../src/constants";
 
 const ctx = { waitUntil: (_: Promise<any>) => {} } as any;
 
@@ -198,7 +199,7 @@ describe("POST /update", () => {
     const { store, mock } = makeStatefulVectorize([
       {
         id: "entry-abc",
-        values: new Array(384).fill(0.1),
+        values: new Array(EMBEDDING_DIMS).fill(0.1),
         metadata: { content: "Original content", parentId: "entry-abc", chunkIndex: 0, totalChunks: 1 },
       },
     ]);

@@ -16,6 +16,7 @@ import { makeMemoryKV, makeTestDb, makeTestEnv } from "../helpers/make-env";
 import { CONFIG_KEY } from "../../src/config";
 import { MIGRATION_KEY } from "../../src/migration/embedding";
 import type { Env } from "../../src/env";
+import { EMBEDDING_MODEL } from "../../src/constants";
 
 const ctx = { waitUntil: () => {} } as unknown as ExecutionContext;
 const TOKEN = "test-token";
@@ -77,7 +78,7 @@ describe("migration routes", () => {
     // Named "at least" because the projection is a lower bound — the chunker's
     // sentence snapping can only produce more.
     expect(typeof body.chunksAtLeast).toBe("number");
-    expect(body.model).toBe("@cf/baai/bge-small-en-v1.5");
+    expect(body.model).toBe(EMBEDDING_MODEL);
   });
 
   it("reports the configured model, so the app can spot a stale ledger", async () => {

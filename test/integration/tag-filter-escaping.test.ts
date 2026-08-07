@@ -24,6 +24,7 @@ import worker from "../../src/index";
 import { req } from "../helpers/make-request";
 import type { Env } from "../../src/env";
 import { tagLikePattern } from "../../src/memory/tag-sql";
+import { EMBEDDING_DIMS } from "../../src/constants";
 
 const ctx = { waitUntil: (_: Promise<any>) => {} } as any;
 
@@ -56,7 +57,7 @@ function envOver(s: SqliteD1): Env {
   const VECTORIZE = {
     ...makeVectorizeMock(),
     getByIds: async (ids: string[]) =>
-      ids.map(id => ({ id, values: new Array(384).fill(0.1), metadata: { parentId: id.replace(/^v-/, "") } })),
+      ids.map(id => ({ id, values: new Array(EMBEDDING_DIMS).fill(0.1), metadata: { parentId: id.replace(/^v-/, "") } })),
   } as unknown as VectorizeIndex;
   return makeTestEnv(undefined, { DB, VECTORIZE });
 }

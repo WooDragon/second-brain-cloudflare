@@ -14,6 +14,7 @@ import { resetDatabaseInit } from "../../src/db/init";
 import { makeTestDb, makeTestEnv, makeMemoryKV } from "../helpers/make-env";
 import { D1Mock } from "../helpers/d1-mock";
 import type { Env } from "../../src/env";
+import { EMBEDDING_MODEL, EMBEDDING_DIMS } from "../../src/constants";
 
 function makeSseStream(response: string) {
   return new ReadableStream({
@@ -28,7 +29,7 @@ function makeSseStream(response: string) {
 function makeDigestAI() {
   return {
     run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === EMBEDDING_MODEL) return { data: [new Array(EMBEDDING_DIMS).fill(0.1)] };
       if (opts?.stream) return makeSseStream("A digest of the tagged memories.");
       return { response: "3" };
     }),

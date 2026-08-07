@@ -3,6 +3,7 @@ import worker from "../../src/index";
 import { makeTestEnv, makeTestDb } from "../helpers/make-env";
 import { req } from "../helpers/make-request";
 import type { Env } from "../../src/env";
+import { EMBEDDING_MODEL, EMBEDDING_DIMS } from "../../src/constants";
 import { D1Mock } from "../helpers/d1-mock";
 
 const ctx = { waitUntil: (_: Promise<any>) => {} } as any;
@@ -28,7 +29,7 @@ function unclassifiedEntry(id: string, tags: string[] = ["work"]) {
 function makeClassifyingAIMock(result: { importance: number; canonical: boolean; kind: "episodic" | "semantic" }) {
   return {
     run: vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === EMBEDDING_MODEL) return { data: [new Array(EMBEDDING_DIMS).fill(0.1)] };
       return new ReadableStream({
         start(c) {
           c.enqueue(new TextEncoder().encode(`data: {"response":${JSON.stringify(JSON.stringify(result))}}\n\n`));

@@ -5,6 +5,7 @@ import { makeTestEnv, makeTestDb, makeVectorizeMock } from "../helpers/make-env"
 import { req } from "../helpers/make-request";
 import type { Env } from "../../src/env";
 import { D1Mock } from "../helpers/d1-mock";
+import { EMBEDDING_MODEL, EMBEDDING_DIMS } from "../../src/constants";
 import { tagsAfterAppend, tagsAfterWrite, STALE_AS_OF } from "../../src/memory/stale";
 import { getVolatility } from "../../src/memory/volatility";
 import { runStalenessPass, STALENESS_AGE_MS } from "../../src/staleness/pass";
@@ -22,7 +23,7 @@ function makeCtx() {
 function makeContradictionAI(response: string) {
   return {
     run: vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === EMBEDDING_MODEL) return { data: [new Array(EMBEDDING_DIMS).fill(0.1)] };
       return new ReadableStream({
         start(c) {
           c.enqueue(new TextEncoder().encode(`data: {"response":${JSON.stringify(response)}}\n\n`));

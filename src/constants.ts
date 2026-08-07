@@ -9,7 +9,13 @@ export const TAG_BOOST_MAX = 1.5;
 // log1p(|net|) * this step, clamped to the [1,5] importance band. Tunable.
 export const CONTRADICTION_IMPORTANCE_STEP = 1.0;
 
-export const EMBEDDING_MODEL = "@cf/baai/bge-small-en-v1.5";
+// DOWNSTREAM(model): switched to qwen3-embedding-0.6b for CJK-quality embeddings
+// (1024-dim, asymmetric query/document — see the embed function in src/lib/ai.ts).
+export const EMBEDDING_MODEL = "@cf/qwen/qwen3-embedding-0.6b";
+// DOWNSTREAM(model): must change in lockstep with EMBEDDING_MODEL — every model
+// swap changes the output dimension, and a Vectorize index's dimension is fixed
+// at creation time and cannot be altered afterward.
+export const EMBEDDING_DIMS = 1024;
 
 export const CHUNK_MAX_CHARS = 1600;
 // ── Embedding migration (#248) ───────────────────────────────────────────────
@@ -29,8 +35,9 @@ export const INSIGHT_MAX_TOKENS = 300;
 export const PATTERN_MAX_TOKENS = 100;
 export const DIGEST_MAX_TOKENS = 400;
 
+// DOWNSTREAM(model): dimension bumped to 1024 to match qwen3-embedding-0.6b (was 384).
 export const VECTORIZE_FIX_HINT =
-  "run `npx wrangler vectorize create second-brain-vectors --dimensions=384 --metric=cosine`, or grant the build token Vectorize Edit and redeploy";
+  `run \`npx wrangler vectorize create second-brain-vectors --dimensions=${EMBEDDING_DIMS} --metric=cosine\`, or grant the build token Vectorize Edit and redeploy`;
 
 export const VECTORIZE_TOP_K_MULTIPLIER = 3;
 // getByIds batch size for tag-scoped recall — Vectorize rejects more than 20 IDs
