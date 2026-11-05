@@ -66,4 +66,21 @@ describe("chunkText", () => {
       pos += chunk.length;
     }
   });
+
+  it.each(["。", "！", "？", "；"])("breaks at the CJK sentence mark %s instead of mid-sentence", (mark) => {
+    // 70 characters, the mark at index 70, then 70 more. A hard cut at 100 would
+    // land in the middle of the second sentence; the mark is past the halfway
+    // point, so it is a valid soft boundary.
+    const firstSentence = "あ".repeat(70) + mark;
+    const [first] = chunkText(firstSentence + "い".repeat(70), 100, 0);
+    expect(first).toBe(firstSentence);
+  });
+
+  it("still hard-cuts CJK text whose only sentence mark is before the halfway point", () => {
+    // Last mark sits at index 49, just under the halfway point of a 100-char
+    // budget: using it would waste half the chunk, so the hard cut still wins.
+    const text = "あ。".repeat(25) + "い".repeat(150);
+    const [first] = chunkText(text, 100, 0);
+    expect(first.length).toBe(100);
+  });
 });
