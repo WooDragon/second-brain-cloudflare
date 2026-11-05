@@ -6,8 +6,20 @@ import { makeTestEnv } from "../helpers/make-env";
 describe("embed() input shape", () => {
   it("sends the bge-en models the plain text array they accept", async () => {
     const env = makeTestEnv();
-    await embed("hello", env, DEFAULTS);
+    await embed("hello", env, { ...DEFAULTS, EMBEDDING_MODEL: "@cf/baai/bge-small-en-v1.5" });
     expect(vi.mocked(env.AI.run).mock.calls[0][1]).toEqual({ text: ["hello"] });
+  });
+
+  it("tells an asymmetric model the input is a document by default", async () => {
+    const env = makeTestEnv();
+    await embed("hello", env, DEFAULTS);
+    expect(vi.mocked(env.AI.run).mock.calls[0][1]).toEqual({ documents: ["hello"] });
+  });
+
+  it("tells an asymmetric model when the input is a search query", async () => {
+    const env = makeTestEnv();
+    await embed("hello", env, DEFAULTS, "query");
+    expect(vi.mocked(env.AI.run).mock.calls[0][1]).toEqual({ queries: ["hello"] });
   });
 
   it("asks bge-m3 to truncate over-long input instead of rejecting it", async () => {
@@ -27,10 +39,20 @@ describe("embedMany() input shape", () => {
   it("sends every text in one AI.run call and returns one vector per text, in order", async () => {
     const env = makeTestEnv();
     env.AI.run = vi.fn().mockResolvedValue({ data: [[1, 0], [0, 1]] });
-    const vectors = await embedMany(["a", "b"], env, DEFAULTS);
+    const vectors = await embedMany(["a", "b"], env, { ...DEFAULTS, EMBEDDING_MODEL: "@cf/baai/bge-small-en-v1.5" });
     expect(vi.mocked(env.AI.run).mock.calls).toHaveLength(1);
     expect(vi.mocked(env.AI.run).mock.calls[0][1]).toEqual({ text: ["a", "b"] });
     expect(vectors).toEqual([[1, 0], [0, 1]]);
+  });
+
+  it("carries one role for the whole batch of an asymmetric model, never a mix", async () => {
+    const env = makeTestEnv();
+    env.AI.run = vi.fn().mockResolvedValue({ data: [[1, 0], [0, 1]] });
+    await embedMany(["a", "b"], env, DEFAULTS);
+    expect(vi.mocked(env.AI.run).mock.calls).toHaveLength(1);
+    expect(vi.mocked(env.AI.run).mock.calls[0][1]).toEqual({ documents: ["a", "b"] });
+    await embedMany(["a", "b"], env, DEFAULTS, "query");
+    expect(vi.mocked(env.AI.run).mock.calls[1][1]).toEqual({ queries: ["a", "b"] });
   });
 
   it("asks bge-m3 to truncate the whole batch, same as a single text", async () => {

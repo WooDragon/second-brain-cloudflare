@@ -15,6 +15,7 @@ import { createProject } from "../../src/projects/registry";
 import { standingKvKey } from "../../src/standing/cache";
 import { resolveDecisionOutcome } from "../../src/memory/actions";
 import type { Env } from "../../src/env";
+import { DEFAULTS } from "../../src/config";
 
 let sqlite: SqliteD1;
 let env: Env;
@@ -189,7 +190,7 @@ describe("MCP brief: decisions due for review, You owe, Owed to you", () => {
 describe("standing in the brief", () => {
   async function seedStandingCache(workspaceId: string, item: { id: string; projects: string[]; createdAt: number }) {
     const cache = {
-      v: 1, model: "@cf/baai/bge-small-en-v1.5", dim: 384, builtAt: Date.now(),
+      v: 1, model: DEFAULTS.EMBEDDING_MODEL, dim: DEFAULTS.EMBEDDING_DIM, builtAt: Date.now(),
       items: [{ id: item.id, projects: item.projects, createdAt: item.createdAt, vecs: ["AACAPwAAAEA="] }],
     };
     await env.OAUTH_KV.put(standingKvKey(workspaceId), JSON.stringify(cache));

@@ -15,6 +15,7 @@ import { revertEntry } from "../../src/memory/undo";
 import { canRevert, loadHistory } from "../../src/memory/versions";
 import { DEFAULTS } from "../../src/config";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const ctx = { waitUntil: () => {} } as unknown as ExecutionContext;
 const stream = (text: string) => new ReadableStream({ start(c) {
@@ -40,7 +41,7 @@ function statefulVectorize(decision?: string, matchId?: string, matchScore = 0.9
   return makeVectorizeMock(overrides as any);
 }
 function decisionAI(decision: string) {
-  return { run: vi.fn(async (model: string) => model.startsWith("@cf/baai/bge") ? { data: [new Array(384).fill(0.1)] } : stream(decision)) } as any;
+  return { run: vi.fn(async (model: string) => isEmbeddingCall(model) ? { data: [new Array(384).fill(0.1)] } : stream(decision)) } as any;
 }
 
 beforeEach(async () => {

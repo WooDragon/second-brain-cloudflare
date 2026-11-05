@@ -5,6 +5,7 @@ import { resetDatabaseInit, initializeDatabase } from "../../src/db/init";
 import { makeTestEnv, makeMemoryKV, makeVectorizeMock } from "../helpers/make-env";
 import { makeSqliteD1, type SqliteD1 } from "../helpers/sqlite-d1";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const DAY = 86400000;
 let now = 400 * DAY;
@@ -20,7 +21,7 @@ const sse = (text: string) => new ReadableStream({
 function makeAI(decision: () => string) {
   return {
     run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-      if (model.startsWith("@cf/baai/bge")) return { data: [new Array(384).fill(0.1)] };
+      if (isEmbeddingCall(model)) return { data: [new Array(384).fill(0.1)] };
       const prompt = String(opts?.messages?.[0]?.content ?? "");
       if (prompt.includes("Choose exactly one action") || prompt.includes("checking if a new memory contradicts")) return sse(decision());
       return opts?.stream ? sse("A digest of the work memories.") : { response: "3" };

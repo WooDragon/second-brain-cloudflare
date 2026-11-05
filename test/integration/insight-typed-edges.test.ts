@@ -22,6 +22,7 @@ import { resetDatabaseInit } from "../../src/db/init";
 import { makeTestEnv, makeMemoryKV } from "../helpers/make-env";
 import { makeSqliteD1, type SqliteD1 } from "../helpers/sqlite-d1";
 import type { Env } from "../../src/env";
+import { DEFAULTS } from "../../src/config";
 
 const DAY = 86400000;
 const NOW = 400 * DAY;
@@ -41,7 +42,7 @@ function makeAI(insightPayload: string) {
   });
   return {
     run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       const prompt = String(opts?.messages?.[0]?.content ?? "");
       return sse(prompt.includes("Memory A:") ? insightPayload : "3");
     }),

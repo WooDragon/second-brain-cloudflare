@@ -3,6 +3,7 @@ import { compressTag } from "../../src/compression/digest";
 import { makeTestDb, makeTestEnv } from "../helpers/make-env";
 import { D1Mock } from "../helpers/d1-mock";
 import type { Env } from "../../src/env";
+import { DEFAULTS } from "../../src/config";
 
 function makeSseStream(response: string) {
   return new ReadableStream({
@@ -17,7 +18,7 @@ function makeSseStream(response: string) {
 function makeDigestAI(digestText = "Work on the API redesign is progressing well with REST chosen over GraphQL.") {
   return {
     run: vi.fn().mockImplementation(async (_model: string, opts: any) => {
-      if (_model === "@cf/baai/bge-small-en-v1.5")
+      if (_model === DEFAULTS.EMBEDDING_MODEL)
         return { data: [new Array(384).fill(0.1)] };
       if (opts?.stream)
         return makeSseStream(digestText);

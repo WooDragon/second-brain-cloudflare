@@ -18,6 +18,7 @@ import { deleteForever } from "../../src/memory/trash";
 import { trashNonce } from "../helpers/trash-env";
 import { DEFAULTS } from "../../src/config";
 import type { Env } from "../../src/env";
+import { embeddedTexts } from "../helpers/embedding";
 
 let sqlite: SqliteD1;
 let env: Env;
@@ -56,7 +57,7 @@ function vectorEnv() {
     // R20's batchEmbeds sends every chunk in one call: answer with one vector per requested text.
     AI: { run: vi.fn(async (_model: string, opts: any) => {
       if (failEmbed.on) throw new Error("AI transient");
-      const texts = Array.isArray(opts?.text) ? opts.text : [opts?.text];
+      const texts = embeddedTexts(opts);
       return { data: texts.map(() => new Array(384).fill(0.1)) };
     }) } as any,
   }) as Env;

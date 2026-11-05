@@ -4,6 +4,7 @@ import { makeTestDb, makeTestEnv, makeVectorizeMock } from "../helpers/make-env"
 import { req } from "../helpers/make-request";
 import type { Env } from "../../src/env";
 import { D1Mock } from "../helpers/d1-mock";
+import { DEFAULTS } from "../../src/config";
 
 const ctx = { waitUntil: (_: Promise<any>) => {} } as any;
 
@@ -26,13 +27,13 @@ function makeSseStream(response: string) {
 }
 
 // Prompt-aware AI stub that distinguishes 3 call types:
-//   1. embed  — model === "@cf/baai/bge-small-en-v1.5" → return vector
+//   1. embed  — model === DEFAULTS.EMBEDDING_MODEL → return vector
 //   2. merge  — prompt contains "Choose exactly one action" → return mergeResponse
 //   3. classify — prompt contains "Classify this memory" → return classifyResponse
 function makePromptAwareAI(mergeResponse: string, classifyResponse: string): Ai {
   return {
     run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-      if (model === "@cf/baai/bge-small-en-v1.5")
+      if (model === DEFAULTS.EMBEDDING_MODEL)
         return { data: [new Array(384).fill(0.1)] };
       const prompt: string = (opts?.messages ?? []).map((m: any) => m.content).join("\n");
       if (prompt.includes("Choose exactly one action")) {
@@ -51,7 +52,7 @@ function makePromptAwareAI(mergeResponse: string, classifyResponse: string): Ai 
 function makeMergeAI(response: string): Ai {
   return {
     run: vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5")
+      if (model === DEFAULTS.EMBEDDING_MODEL)
         return { data: [new Array(384).fill(0.1)] };
       return new ReadableStream({
         start(c) {
@@ -473,7 +474,7 @@ describe("POST /capture — smart merge (flagged band 0.85–0.95)", () => {
 
   it("blocked (≥0.95): still blocked, no LLM call for merge", async () => {
     const aiRunMock = vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       throw new Error("LLM should not be called for blocked entries");
     });
     env = makeTestEnv(db, {

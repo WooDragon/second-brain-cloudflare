@@ -16,6 +16,7 @@ import { makeSqliteD1, type SqliteD1 } from "../helpers/sqlite-d1";
 import { makeTestEnv, makeMemoryKV } from "../helpers/make-env";
 import type { Identity } from "../../src/lib/identity";
 import type { Env } from "../../src/env";
+import { DEFAULTS } from "../../src/config";
 
 const DAY = 86400000;
 const NOW = 400 * DAY;
@@ -184,7 +185,7 @@ describe("digest rollup partitioning", () => {
   function makeDigestAI() {
     const prompts: string[] = [];
     const run = vi.fn().mockImplementation(async (_model: string, opts: any) => {
-      if (_model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (_model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       if (opts?.stream) {
         prompts.push(opts.messages[0].content as string);
         const body = new ReadableStream({

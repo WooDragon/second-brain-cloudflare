@@ -5,6 +5,7 @@ import { resetDatabaseInit, initializeDatabase } from "../../src/db/init";
 import { makeTestEnv, makeMemoryKV, makeVectorizeMock } from "../helpers/make-env";
 import { makeSqliteD1 } from "../helpers/sqlite-d1";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const pending: Promise<unknown>[] = [];
 const ctx = { waitUntil: (p: Promise<unknown>) => { pending.push(p); } } as unknown as ExecutionContext;
@@ -24,7 +25,7 @@ async function setup(score: number, decision: string) {
       query: vi.fn().mockResolvedValue({ matches: [{ id: "old", score, metadata: { parentId: "old" } }] }),
       upsert: vi.fn(async (rows: any[]): Promise<any> => { for (const row of rows) vectors.set(row.id, row.metadata); return { mutationId: "m" }; }),
     }),
-    AI: { run: vi.fn(async (model: string) => model.startsWith("@cf/baai/bge")
+    AI: { run: vi.fn(async (model: string) => isEmbeddingCall(model)
       ? { data: [new Array(384).fill(0.1)] } : stream(decision)) } as any,
   }) as Env;
   await initializeDatabase(env);

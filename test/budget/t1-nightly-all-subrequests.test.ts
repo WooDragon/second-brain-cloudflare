@@ -11,6 +11,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import worker from "../../src/index";
+import { isEmbeddingCall, embeddedTexts } from "../helpers/embedding";
 
 const HAS_PENDING = existsSync(resolve(__dirname, "../../src/vectorize/pending.ts"));
 const CLOUDFLARE_SUBREQUESTS = 1000;
@@ -31,8 +32,8 @@ describe.runIf(HAS_PENDING)("the whole nightly invocation, every binding counted
     const d1Sql: string[] = [];
     // One vector per input text, as Workers AI returns for a batch (embedMany checks the count).
     const ai = { run: async (model: string, input: any) => {
-      if (model.startsWith("@cf/baai/bge")) {
-        const texts = Array.isArray(input?.text) ? input.text : [input?.text];
+      if (isEmbeddingCall(model)) {
+        const texts = embeddedTexts(input);
         return { data: texts.map(() => Array.from({ length: 384 }, (_, i) => (i % 7) / 10)) };
       }
       return new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode('data: {"response":"ok"}\n\ndata: [DONE]\n\n')); c.close(); } });
@@ -66,7 +67,7 @@ describe.runIf(HAS_PENDING)("the whole nightly invocation, every binding counted
     const env = {
       ...t.env,
       DB: { prepare: (sql: string) => wrap(prepare(sql), sql.replace(/\s+/g, " ").trim().slice(0, 60)), batch: (s: any[]) => { bill.d1++; d1Sql.push("BATCH"); return batch(s.map((x: any) => x.__inner ?? x)); }, exec: (q: string) => { bill.d1++; d1Sql.push("EXEC " + q.slice(0, 40)); return exec(q); } },
-      OAUTH_KV: counted(kv, "kv"), VECTORIZE: counted(vz, "vectorize"), AI: { run: (m: string, input: any) => { bill.ai++; if (String(m).startsWith("@cf/baai/bge")) embedTexts.push(...(Array.isArray(input?.text) ? input.text : [input?.text]).map((x: string) => x.length)); return (ai as any).run(m, input); } },
+      OAUTH_KV: counted(kv, "kv"), VECTORIZE: counted(vz, "vectorize"), AI: { run: (m: string, input: any) => { bill.ai++; if (String(m).startsWith("@cf/baai/bge")) embedTexts.push(...(embeddedTexts(input)).map((x: string) => x.length)); return (ai as any).run(m, input); } },
     };
 
     const cpu = () => { const u = (process as any).threadCpuUsage ? (process as any).threadCpuUsage() : process.cpuUsage(); return (u.user + u.system) / 1000; };

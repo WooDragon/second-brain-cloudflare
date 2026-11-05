@@ -4,6 +4,7 @@ import { makeTestEnv, makeTestDb, makeVectorizeMock } from "../helpers/make-env"
 import { req } from "../helpers/make-request";
 import type { Env } from "../../src/env";
 import { D1Mock } from "../helpers/d1-mock";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 function makeCtx() {
   const pending: Promise<any>[] = [];
@@ -246,7 +247,7 @@ describe("POST /capture", () => {
       }),
       AI: {
         run: vi.fn().mockImplementation(async (model: string) => {
-          if (model.startsWith("@cf/baai/bge")) return { data: [new Array(384).fill(0.1)] };
+          if (isEmbeddingCall(model)) return { data: [new Array(384).fill(0.1)] };
           return new ReadableStream({
             start(c) {
               c.enqueue(new TextEncoder().encode(`data: {"response":${JSON.stringify('{"action":"merge","target_id":"protected","merged_content":"merged"}')}}\n\n`));

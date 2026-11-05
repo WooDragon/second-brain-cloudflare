@@ -15,6 +15,7 @@ import { DEFAULTS } from "../../src/config";
 import { VECTORIZE_UPSERT_BATCH, WRITE_PATH_TOPK } from "../../src/constants";
 import { deleteEntryVectors } from "../../src/vectorize/batch";
 import type { Env } from "../../src/env";
+import { embeddedTexts } from "../helpers/embedding";
 
 const DIMS = 256;
 
@@ -47,7 +48,7 @@ function makeEnv() {
     // Codex review, T-0102 F3: storeEntry now always batchEmbeds (embedMany, one AI call for the
     // whole chunk batch), so the mock must return one vector per input text like the real API,
     // not just the first.
-    AI: { run: vi.fn(async (_m: string, input: { text: string[] }) => { embeds.push(...input.text); return { data: input.text.map(bow) }; }) },
+    AI: { run: vi.fn(async (_m: string, input: any) => { const texts = embeddedTexts(input); embeds.push(...texts); return { data: texts.map(bow) }; }) },
     VECTORIZE_GRACE_MS: "0",
   } as unknown as Env;
   return { env, d1, vectorize, embeds };

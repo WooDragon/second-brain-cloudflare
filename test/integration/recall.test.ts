@@ -7,13 +7,15 @@ import { D1Mock } from "../helpers/d1-mock";
 import { makeSqliteD1, type SqliteD1 } from "../helpers/sqlite-d1";
 import { initializeDatabase, resetDatabaseInit } from "../../src/db/init";
 import { setDbReady } from "../../src/runtime/state";
+import { DEFAULTS } from "../../src/config";
+import { EMBEDDING_VECTOR_DIM } from "../../src/constants";
 
 // Returns an AI mock that always resolves a contradiction verdict (for captureEntry).
 function makeContradictionAI(response: string): Ai {
   return {
     run: vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5")
-        return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL)
+        return { data: [new Array(EMBEDDING_VECTOR_DIM).fill(0.1)] };
       return new ReadableStream({
         start(c) {
           c.enqueue(new TextEncoder().encode(`data: {"response":${JSON.stringify(response)}}\n\n`));
@@ -37,8 +39,8 @@ function makeMatch(id: string, score: number, overrides: Record<string, any> = {
 
 // The AI mock embeds every query as 384 dims of 0.1 (make-env.ts) —
 // SIMILAR_VEC scores cosine 1.0 against it, DISSIMILAR_VEC scores ~0.
-const SIMILAR_VEC = new Array(384).fill(0.1);
-const DISSIMILAR_VEC = Array.from({ length: 384 }, (_, i) => (i % 2 === 0 ? 0.1 : -0.1));
+const SIMILAR_VEC = new Array(EMBEDDING_VECTOR_DIM).fill(0.1);
+const DISSIMILAR_VEC = Array.from({ length: EMBEDDING_VECTOR_DIM }, (_, i) => (i % 2 === 0 ? 0.1 : -0.1));
 
 describe("GET /recall", () => {
   let env: Env;
@@ -367,7 +369,7 @@ describe("GET /recall", () => {
       { id: "entry-1", content: "Work meeting notes", tags: '["work"]', source: "api", created_at: 1000, vector_ids: '["entry-1"]', recall_count: 0, importance_score: 0 },
     );
     const aiRun = vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(EMBEDDING_VECTOR_DIM).fill(0.1)] };
       return new ReadableStream({
         start(c) {
           c.enqueue(new TextEncoder().encode('data: {"response":"work"}\n\n'));
@@ -387,7 +389,7 @@ describe("GET /recall", () => {
     expect(res.status).toBe(200);
     // "work" is a known tag AND appears as a keyword in the query → LLM not called for inference
     // (embed call uses BGE model; only LLM calls use other models)
-    const llmCalls = aiRun.mock.calls.filter((args: any[]) => args[0] !== "@cf/baai/bge-small-en-v1.5");
+    const llmCalls = aiRun.mock.calls.filter((args: any[]) => args[0] !== DEFAULTS.EMBEDDING_MODEL);
     expect(llmCalls).toHaveLength(0);
   });
 
@@ -438,7 +440,7 @@ describe("GET /recall", () => {
       { id: "entry-1", content: "Office lease renewal", tags: '["work"]', source: "api", created_at: 1000, vector_ids: '["entry-1"]', recall_count: 0, importance_score: 0 },
     );
     const aiRun = vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(EMBEDDING_VECTOR_DIM).fill(0.1)] };
       return new ReadableStream({
         start(c) {
           c.enqueue(new TextEncoder().encode('data: {"response":"work"}\n\n'));
@@ -458,7 +460,7 @@ describe("GET /recall", () => {
     const res = await worker.fetch(req("GET", "/recall?query=quarterly+planning"), env, ctx);
     expect(res.status).toBe(200);
     // only the embedding runs; tag inference costs no AI call
-    const llmCalls = aiRun.mock.calls.filter((args: any[]) => args[0] !== "@cf/baai/bge-small-en-v1.5");
+    const llmCalls = aiRun.mock.calls.filter((args: any[]) => args[0] !== DEFAULTS.EMBEDDING_MODEL);
     expect(llmCalls).toHaveLength(0);
   });
 

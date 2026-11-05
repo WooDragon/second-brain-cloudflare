@@ -530,11 +530,13 @@ export async function recallEntries(
   // differs from the plain semantic text standing scores against), one text otherwise: never an
   // extra AI call over today's single embedding request (spec 15 2.8 step 2).
   const needsStandingEmbed = standingHasItems && profile.semanticQuery !== embedQuery;
+  // Both texts below are search queries, including the standing-cache one: standing items were
+  // indexed as documents, so scoring a query against them needs the query side of the pair.
   const embedStep: Promise<{ values: number[]; standingVector?: number[] }> = arms === "keyword-only"
     ? Promise.resolve({ values: [] })
     : needsStandingEmbed
-      ? embedMany([embedQuery, profile.semanticQuery], env, cfg).then(([a, b]) => ({ values: a, standingVector: b }))
-      : embed(embedQuery, env, cfg).then(v => ({ values: v, standingVector: standingHasItems ? v : undefined }));
+      ? embedMany([embedQuery, profile.semanticQuery], env, cfg, "query").then(([a, b]) => ({ values: a, standingVector: b }))
+      : embed(embedQuery, env, cfg, "query").then(v => ({ values: v, standingVector: standingHasItems ? v : undefined }));
   const [{ values, standingVector }, queryTags] = await Promise.all([
     embedStep,
     inferQueryTags(lexicalQuery, env, ctx, identity),

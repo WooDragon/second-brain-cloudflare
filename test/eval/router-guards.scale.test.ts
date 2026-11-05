@@ -5,11 +5,11 @@ import { DEFAULTS } from "../../src/config";
 import { ReplayStore, makeReplayAi } from "./ai-replay";
 import { buildCorpus, CORE_DATA_DIR, type CoreCorpusId } from "./corpus/build";
 import { loadCorpus } from "./corpus/loader";
-import { replayPaths } from "./corpora";
+import { CORE_CORPUS_EMBEDDING_MODEL, replayPaths } from "./corpora";
 import { runVariant } from "./runner";
 import { getVariant } from "./variants";
 
-const MODEL = DEFAULTS.EMBEDDING_MODEL;
+const MODEL = CORE_CORPUS_EMBEDDING_MODEL;
 const PINNED = JSON.parse(readFileSync(resolve(CORE_DATA_DIR, "../baselines/router-guards.json"), "utf8")) as Record<string, Record<string, boolean>>;
 
 // Opt-in: the 5k and 20k replay caches are local (.eval-cache/replay, built by `prepare`), never committed, so CI cannot run

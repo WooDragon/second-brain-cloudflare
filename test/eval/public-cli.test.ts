@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { cleanTemp } from "../helpers/tmp";
+import { CORE_CORPUS_EMBEDDING_MODEL } from "./corpora";
 
 afterAll(cleanTemp);
 
@@ -78,7 +79,7 @@ describe("embedding model defaults", () => {
     expect(cli.parseCli(["--variant", "baseline", "--corpus", "scifact"])).toMatchObject({ model: "@cf/baai/bge-small-en-v1.5" });
     expect(cli.parseCli(["--variant", "baseline", "--corpus", "miracl-ja"])).toMatchObject({ model: "@cf/baai/bge-m3" });
     expect(cli.parseCli(["prepare", "--variant", "baseline", "--corpus", "miracl-ja"])).toMatchObject({ model: "@cf/baai/bge-m3" });
-    expect(cli.parseCli(["--variant", "baseline", "--corpus", "core-1k"])).toMatchObject({ model: DEFAULTS.EMBEDDING_MODEL });
+    expect(cli.parseCli(["--variant", "baseline", "--corpus", "core-1k"])).toMatchObject({ model: CORE_CORPUS_EMBEDDING_MODEL });
   });
 
   it("accepts the matching model spelled out and refuses any other one, even explicit", () => {

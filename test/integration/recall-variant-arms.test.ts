@@ -4,7 +4,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import worker from "../../src/index";
 import { initializeDatabase, resetDatabaseInit } from "../../src/db/init";
 import { ensureTenantBootstrap } from "../../src/lib/tenancy";
-import { FTS_READY_KV_KEY } from "../../src/constants";
+import { EMBEDDING_VECTOR_DIM, FTS_READY_KV_KEY } from "../../src/constants";
 import { DEFAULTS } from "../../src/config";
 import { resetFtsReadyMemo } from "../../src/recall/fts";
 import { recallEntries } from "../../src/recall/search";
@@ -33,7 +33,7 @@ async function setup(publicPath = false, tagged = false, memberVectors = false) 
   });
   const getByIds = vi.fn().mockImplementation(async (ids: string[]) => ids.map(id => ({
     id,
-    values: new Array(384).fill(0.1),
+    values: new Array(EMBEDDING_VECTOR_DIM).fill(0.1),
     metadata: { parentId: id.split("-chunk-")[0] },
   })));
   const env = makeTestEnv(undefined, {
@@ -114,14 +114,14 @@ describe("internal.variant.arms", () => {
     expect(sqlite.batches.some(batch => batch.some(sql => sql.includes("SELECT e.id, e.content") && sql.includes("entries_fts MATCH")))).toBe(false);
   });
 
-  it("dense-only still sends a real 384-dimension embedding to Vectorize", async () => {
+  it("dense-only still sends a real embedding at the model dimension to Vectorize", async () => {
     const { env, query } = await setup();
     await run(env, { arms: "dense-only" });
     expect((env.AI.run as ReturnType<typeof vi.fn>).mock.calls.filter(([model]) => model === DEFAULTS.EMBEDDING_MODEL)).toHaveLength(1);
     expect(query).toHaveBeenCalledTimes(1);
     const vector = query.mock.calls[0][0] as number[];
-    expect(vector).toHaveLength(384);
-    expect(vector).toEqual(new Array(384).fill(0.1));
+    expect(vector).toHaveLength(EMBEDDING_VECTOR_DIM);
+    expect(vector).toEqual(new Array(EMBEDDING_VECTOR_DIM).fill(0.1));
   });
 
   it.each(["tag", "project"])("ignores every arm flag for %s-scoped member-first recall", async scope => {

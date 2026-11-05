@@ -11,6 +11,7 @@ import { initializeDatabase, resetDatabaseInit } from "../../src/db/init";
 import { ensureTenantBootstrap } from "../../src/lib/tenancy";
 import { compressTag } from "../../src/compression/digest";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 let sqlite: SqliteD1;
 afterEach(() => sqlite?.close());
@@ -34,7 +35,7 @@ async function makeDigestEnv() {
 
 function mockAi() {
   return {
-    run: vi.fn(async (model: string) => model.startsWith("@cf/baai/bge") ? { data: [new Array(384).fill(0.1)] }
+    run: vi.fn(async (model: string) => isEmbeddingCall(model) ? { data: [new Array(384).fill(0.1)] }
       : new ReadableStream({ start(c) {
         c.enqueue(new TextEncoder().encode(`data: {"response":"Synthesized text"}\n\n`));
         c.enqueue(new TextEncoder().encode("data: [DONE]\n\n")); c.close();

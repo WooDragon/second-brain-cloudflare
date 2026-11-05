@@ -28,7 +28,7 @@ let decision = `{"contradicts": false}`;
 
 function ai() {
   return {
-    run: vi.fn(async (model: string) => model.startsWith("@cf/baai/bge")
+    run: vi.fn(async (model: string) => isEmbeddingCall(model)
       ? { data: [new Array(384).fill(0.1)] }
       : new ReadableStream({ start(c) {
         c.enqueue(new TextEncoder().encode(`data: {"response":${JSON.stringify(decision)}}\n\n`));
@@ -217,6 +217,7 @@ describe("descriptions", () => {
 });
 
 import { updateEntryValidity } from "../../src/memory/validity";
+import { isEmbeddingCall } from "../helpers/embedding";
 describe("budget", () => {
   it("update with validity is one read and one batch, plus its audit batch; propagating adds nothing", async () => {
     await seed("denver", { createdAt: Date.UTC(2024, 0, 1), validUntil: Date.UTC(2026, 5, 1) });

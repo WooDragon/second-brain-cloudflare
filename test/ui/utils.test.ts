@@ -2,6 +2,10 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import vm from "node:vm";
+// DOWNSTREAM(model): public/utils.js cannot import this across the plain-JS/TS build
+// boundary, so its dimension is a literal. Pinning the banner assertion to the real
+// constant is what keeps that literal honest.
+import { EMBEDDING_VECTOR_DIM } from "../../src/constants";
 
 const ROOT = resolve(import.meta.dirname, "../..");
 const i18nCtx: any = {
@@ -311,7 +315,7 @@ describe("vectorizeHealthBanner", () => {
     const b = vectorizeHealthBanner({ ok: false, vectorize: { ok: false, indexName: "second-brain-vectors", error: "index not found" } });
     expect(b).not.toBeNull();
     expect(b.title).toContain("second-brain-vectors");
-    expect(b.command).toBe("npx wrangler vectorize create second-brain-vectors --dimensions=384 --metric=cosine");
+    expect(b.command).toBe(`npx wrangler vectorize create second-brain-vectors --dimensions=${EMBEDDING_VECTOR_DIM} --metric=cosine`);
     expect(b.gui).toContain("Vectorize Edit");
   });
 

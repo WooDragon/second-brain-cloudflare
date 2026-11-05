@@ -9,6 +9,7 @@ import { resetDatabaseInit, initializeDatabase } from "../../src/db/init";
 import { ensureTenantBootstrap } from "../../src/lib/tenancy";
 import { req } from "../helpers/make-request";
 import type { Env } from "../../src/env";
+import { DEFAULTS } from "../../src/config";
 
 const ctx = { waitUntil: (p: Promise<unknown>) => { void p; } } as ExecutionContext;
 
@@ -32,7 +33,7 @@ describe("POST /update audit trail", () => {
       AI: {
         run: vi.fn().mockImplementation(async (model: string) => {
           if (aiFails) throw new Error("AI binding overloaded");
-          if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+          if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
           return { response: '{"importance":2,"canonical":false,"kind":"semantic"}' };
         }),
       } as unknown as Ai,

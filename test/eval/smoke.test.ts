@@ -7,10 +7,11 @@ import { evaluateGate, formatGate } from "./gate";
 import { runVariant } from "./runner";
 import type { GoldenQuery } from "./types";
 import { getVariant } from "./variants";
+import { CORE_CORPUS_EMBEDDING_MODEL } from "./corpora";
 
 // The default-suite check of the eval harness, end to end, on a small synthetic corpus: build, load, recall, score, gate.
 // It says nothing about ranking quality on the golden set; that is the full eval (test/eval/full.ts), run by hand.
-const MODEL = DEFAULTS.EMBEDDING_MODEL;
+const MODEL = CORE_CORPUS_EMBEDDING_MODEL;
 const coined = (i: number) => `zq${i.toString(36)}vane`;
 const entries: CorpusEntry[] = Array.from({ length: 150 }, (_, i) => ({
   id: `e${i}`, content: `Note ${i} about ${coined(i)} and the ${["garden", "budget", "roadmap", "kitchen"][i % 4]} plan.`, tags: [], source: "api",

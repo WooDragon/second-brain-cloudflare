@@ -6,7 +6,7 @@ import { DEFAULTS } from "../../src/config";
 import { ReplayStore, makeReplayAi } from "./ai-replay";
 import { buildCorpus, type CoreCorpusId } from "./corpus/build";
 import { loadCorpus } from "./corpus/loader";
-import { replayPaths } from "./corpora";
+import { CORE_CORPUS_EMBEDDING_MODEL, replayPaths } from "./corpora";
 import { evaluateGate } from "./gate";
 import { runVariant } from "./runner";
 import { QUERY_CATEGORIES, type MetricName } from "./types";
@@ -15,7 +15,7 @@ import { getVariant, registerVariant } from "./variants";
 const flag = (name: string) => { const at = process.argv.indexOf(name); return at >= 0 ? process.argv[at + 1] : undefined; };
 const corpusId = (flag("--corpus") ?? "core-1k") as CoreCorpusId;
 const metric = (flag("--metric") ?? "recall10") as MetricName;
-const MODEL = DEFAULTS.EMBEDDING_MODEL;
+const MODEL = CORE_CORPUS_EMBEDDING_MODEL;
 
 registerVariant({ name: "sabotage", description: "KEYWORD_CANDIDATE_LIMIT 1 and MMR_LAMBDA 0.", config: { KEYWORD_CANDIDATE_LIMIT: 1, MMR_LAMBDA: 0 } });
 registerVariant({ name: "mild-mmr", description: "MMR_LAMBDA 0.6 (a little more diversity).", config: { MMR_LAMBDA: 0.6 } });

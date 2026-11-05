@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { DEFAULTS } from "../../src/config";
 import { LLM_TAGS_ARMS, ReplayStore, makeReplayAi, type LlmTagsArm } from "./ai-replay";
-import { isCoreCorpus, listCorpora, replayPaths, resolveCorpus } from "./corpora";
+import { CORE_CORPUS_EMBEDDING_MODEL, isCoreCorpus, listCorpora, replayPaths, resolveCorpus } from "./corpora";
 import { CORE_DATA_DIR, CORPUS_IDS } from "./corpus/build";
 import { loadCorpus, type LoadedCorpus } from "./corpus/loader";
 import type { CorpusSpec } from "./corpus/types";
@@ -52,7 +52,7 @@ function positive(name: string, raw: string, opts: { allowZero?: boolean; intege
  */
 function resolveModel(corpus: string, explicit: string | undefined): string {
   const pub = Object.hasOwn(PUBLIC_CORPORA, corpus) ? PUBLIC_CORPORA[corpus] : undefined;
-  if (!pub) return explicit ?? DEFAULTS.EMBEDDING_MODEL;
+  if (!pub) return explicit ?? CORE_CORPUS_EMBEDDING_MODEL;
   if (explicit !== undefined && explicit !== pub.embeddingModel) {
     throw new UsageError(`${corpus} must run with ${pub.embeddingModel} (its recorded embedding model); --embedding-model ${explicit} is refused`);
   }

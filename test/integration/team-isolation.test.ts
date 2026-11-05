@@ -27,6 +27,7 @@ import { ensureTenantBootstrap } from "../../src/lib/tenancy";
 import { createMember } from "../../src/lib/team-admin";
 import { nightSummaryKey } from "../../src/runtime/night-summary";
 import type { Env } from "../../src/env";
+import { DEFAULTS } from "../../src/config";
 
 const ctx = { waitUntil: (_: Promise<any>) => {} } as ExecutionContext;
 const BASE = "http://localhost";
@@ -87,7 +88,7 @@ function digestAI(prompts: string[]): Ai {
   });
   return {
     run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       if (opts?.stream) {
         prompts.push(String(opts?.messages?.[0]?.content ?? ""));
         return sse("A digest paragraph covering the period.");

@@ -25,6 +25,7 @@ import { makeSqliteD1, type SqliteD1 } from "../helpers/sqlite-d1";
 import { makeTestEnv, makeMemoryKV } from "../helpers/make-env";
 import { resetDatabaseInit, initializeDatabase } from "../../src/db/init";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const ctx = { waitUntil: (_: Promise<any>) => {} } as ExecutionContext;
 
@@ -47,7 +48,7 @@ describe("edges from the update and merge paths", () => {
   function ai(verdict: string) {
     return {
       run: vi.fn().mockImplementation(async (model: string) => {
-        if (model.startsWith("@cf/baai/bge")) {
+        if (isEmbeddingCall(model)) {
           embeds++;
           return { data: [new Array(384).fill(0.1)] };
         }

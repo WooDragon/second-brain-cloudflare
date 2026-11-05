@@ -23,6 +23,7 @@ import { makeTestEnv, makeMemoryKV } from "../helpers/make-env";
 import { captureEntry } from "../../src/capture/entry";
 import { resetDatabaseInit, initializeDatabase } from "../../src/db/init";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const NOW = 1_700_000_000_000;
 const EPISODIC = ["kind:episodic"];
@@ -155,7 +156,7 @@ describe("follows edges", () => {
     function aiReturningKind(kind: string) {
       return {
         run: vi.fn().mockImplementation(async (model: string) => {
-          if (model.startsWith("@cf/baai/bge")) return { data: [new Array(384).fill(0.1)] };
+          if (isEmbeddingCall(model)) return { data: [new Array(384).fill(0.1)] };
           const payload = JSON.stringify({
             response: `{"importance": 4, "canonical": false, "kind": "${kind}"}`,
           });
@@ -279,7 +280,7 @@ describe("follows edges", () => {
       let classifyCalls = 0;
       const ai = {
         run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-          if (model.startsWith("@cf/baai/bge")) return { data: [new Array(384).fill(0.1)] };
+          if (isEmbeddingCall(model)) return { data: [new Array(384).fill(0.1)] };
           // Counted by PROMPT, not by call: capture also runs a pre-existing
           // contradiction check on this path, which is not what is being
           // constrained here and would make a raw call count read as 2.
@@ -345,7 +346,7 @@ describe("follows edges", () => {
     it("still infers an edge when classification fails outright", async () => {
       const ai = {
         run: vi.fn().mockImplementation(async (model: string) => {
-          if (model.startsWith("@cf/baai/bge")) return { data: [new Array(384).fill(0.1)] };
+          if (isEmbeddingCall(model)) return { data: [new Array(384).fill(0.1)] };
           throw new Error("model unavailable");
         }),
       } as any;

@@ -372,7 +372,12 @@ function vectorizeHealthBanner(health) {
   const name = health.vectorize.indexName || 'second-brain-vectors';
   return {
     title: t('upkeep.vectorizeBannerTitle', { name }),
-    command: 'npx wrangler vectorize create ' + name + ' --dimensions=384 --metric=cosine',
+    // DOWNSTREAM(model): must match src/constants.ts EMBEDDING_VECTOR_DIM. This file is plain
+    // browser JS served outside the TS build, so the value is duplicated here as a
+    // literal; test/ui/utils.test.ts asserts it against the real constant to keep the
+    // two in lockstep. A stale value here walks the user into recreating the index at
+    // the wrong dimension, which Vectorize cannot fix afterwards.
+    command: 'npx wrangler vectorize create ' + name + ' --dimensions=1024 --metric=cosine',
     gui: t('upkeep.vectorizeBannerGui'),
   };
 }

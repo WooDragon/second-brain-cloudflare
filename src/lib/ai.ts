@@ -78,17 +78,46 @@ export async function readStreamText(stream: ReadableStream): Promise<string> {
   return text;
 }
 
+/**
+ * Which side of a retrieval pair an embedding input is.
+ *
+ * Only asymmetric models care: qwen3-embedding prefixes the two roles with
+ * different instructions, so a search query and the document it should match
+ * do not land in the same place otherwise. For symmetric models (every bge)
+ * this is ignored, which is why it defaults to "document": every write-side
+ * caller (capture, duplicate detection, graph passes, the standing cache) is
+ * embedding a document, and only the recall query path opts into "query".
+ */
+export type EmbeddingMode = "query" | "document";
+
+/** Model families that need the query/document role to be stated. */
+const ASYMMETRIC_EMBEDDING_PREFIX = "@cf/qwen/qwen3-embedding";
+
+/**
+ * The request body for one embedding call. Three shapes, one per model family:
+ * bge-m3 rejects over-long input unless it is told to truncate, asymmetric
+ * models take named `queries`/`documents` arrays, and every symmetric bge-en
+ * model takes the plain `text` array it has always taken.
+ */
+function embedInput(model: string, mode: EmbeddingMode, batch: readonly string[]) {
+  if (model === "@cf/baai/bge-m3") return { text: batch, truncate_inputs: true };
+  if (model.startsWith(ASYMMETRIC_EMBEDDING_PREFIX)) return mode === "query" ? { queries: batch } : { documents: batch };
+  return { text: batch };
+}
+
 export async function embed(
   text: string,
   env: Env,
   config: Readonly<Config> = DEFAULTS,
+  mode: EmbeddingMode = "document",
 ): Promise<number[]> {
-  const [vector] = await embedMany([text], env, config);
+  const [vector] = await embedMany([text], env, config, mode);
   return vector;
 }
 
 /** Texts per embedding call. The bge-*-en-v1.5 schemas allow 100 (maxItems, Workers AI docs,
- * checked 2026-09-27); bge-m3 documents no limit, so it gets a conservative 25. */
+ * checked 2026-09-27); bge-m3 and the qwen3-embedding models document no limit, so they get a
+ * conservative 25. */
 export function embedBatchSize(model: string): number {
   return /^@cf\/baai\/bge-(small|base|large)-en-v1\.5$/.test(model) ? 100 : 25;
 }
@@ -99,13 +128,20 @@ export function embedBatchSize(model: string): number {
  * gets truncate_inputs (it rejects over-length input otherwise; the bge-en models reject the field; #326
  * spec, 10.6). Throws if a call returns a count that does not match its batch, so a caller never pairs a
  * vector with the wrong text.
+ *
+ * `mode` is the whole batch's role: one AI call carries one role, never a mix.
  */
-export async function embedMany(texts: readonly string[], env: Env, config: Readonly<Config> = DEFAULTS): Promise<number[][]> {
+export async function embedMany(
+  texts: readonly string[],
+  env: Env,
+  config: Readonly<Config> = DEFAULTS,
+  mode: EmbeddingMode = "document",
+): Promise<number[][]> {
   const size = embedBatchSize(config.EMBEDDING_MODEL);
   const out: number[][] = [];
   for (let i = 0; i < texts.length; i += size) {
     const batch = texts.slice(i, i + size);
-    const input = config.EMBEDDING_MODEL === "@cf/baai/bge-m3" ? { text: batch, truncate_inputs: true } : { text: batch };
+    const input = embedInput(config.EMBEDDING_MODEL, mode, batch);
     // Workers AI requires `as any` here — the SDK types don't cover all models
     const result = (await env.AI.run(config.EMBEDDING_MODEL as any, input as any)) as any;
     const data = result?.data as number[][] | undefined;

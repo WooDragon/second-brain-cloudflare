@@ -9,8 +9,9 @@ import { COMMITTED_LAYER_VARIANTS } from "./prepare";
 import { runVariant } from "./runner";
 import { getVariant, type VariantSpec } from "./variants";
 import { EVAL_FULL } from "./full";
+import { CORE_CORPUS_EMBEDDING_MODEL } from "./corpora";
 
-const MODEL = DEFAULTS.EMBEDDING_MODEL;
+const MODEL = CORE_CORPUS_EMBEDDING_MODEL;
 const COMMITTED = resolve(CORE_DATA_DIR, `replay.${MODEL.split("/").pop()}.jsonl.gz`);
 
 // calibration.test.ts registers this one itself; the committed layer must cover it too.

@@ -26,6 +26,7 @@ import { createMember } from "../../src/lib/team-admin";
 import { captureEntry } from "../../src/capture/entry";
 import { checkDuplicateAndContradiction } from "../../src/capture/duplicate";
 import type { Env } from "../../src/env";
+import { DEFAULTS } from "../../src/config";
 
 const ctx = { waitUntil: (_: Promise<unknown>) => {} } as ExecutionContext;
 
@@ -60,7 +61,7 @@ function seed(id: string, workspaceId: string, actorId: string, content: string)
 function scriptedAI(verdict: string, prompts: string[]): Ai {
   return {
     run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       prompts.push(String(opts?.messages?.[0]?.content ?? ""));
       return new ReadableStream({
         start(c) {

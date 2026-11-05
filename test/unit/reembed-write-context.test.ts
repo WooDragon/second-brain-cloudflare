@@ -24,6 +24,7 @@ import { runBatch, clearMigration } from "../../src/migration/embedding";
 import worker from "../../src/index";
 import { ensureTenantBootstrap } from "../../src/lib/tenancy";
 import { createMember } from "../../src/lib/team-admin";
+import { embeddedTexts } from "../helpers/embedding";
 
 function makeCtx(): ExecutionContext {
   return { waitUntil: () => {} } as unknown as ExecutionContext;
@@ -60,7 +61,7 @@ describe("Merge re-embed carries the writer's workspace (src/capture/entry.ts)",
       }),
       AI: {
         run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-          if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+          if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
           const prompt: string = (opts?.messages ?? []).map((m: any) => m.content).join("\n");
           if (prompt.includes("Choose exactly one action")) {
             return makeSseStream('{"action":"merge","target_id":"existing-id","merged_content":"Combined memory"}');
@@ -189,7 +190,7 @@ describe("update/append re-embed carries the row workspace, not the caller defau
       // R20's batchEmbeds sends every chunk in one call: this must answer with one vector per
       // requested text, not a fixed single vector, or embedMany's own count check throws.
       AI: { run: vi.fn().mockImplementation(async (_model: string, opts: any) => {
-        const texts = Array.isArray(opts?.text) ? opts.text : [opts?.text];
+        const texts = embeddedTexts(opts);
         return { data: texts.map(() => new Array(384).fill(0.1)) };
       }) } as unknown as Ai,
       OAUTH_KV: makeMemoryKV(),

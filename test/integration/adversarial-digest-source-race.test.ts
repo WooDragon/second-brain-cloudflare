@@ -4,6 +4,7 @@ import { makeSqliteD1 } from "../helpers/sqlite-d1";
 import { makeTestEnv, makeMemoryKV, makeVectorizeMock } from "../helpers/make-env";
 import { resetDatabaseInit, initializeDatabase } from "../../src/db/init";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const stream = (text: string) => new ReadableStream({ start(c) {
   c.enqueue(new TextEncoder().encode(`data: {"response":${JSON.stringify(text)}}\n\n`));
@@ -18,7 +19,7 @@ it("does not roll up a source edited after the digest's source read", async () =
     DB: sqlite.db as unknown as Env["DB"], OAUTH_KV: makeMemoryKV(),
     VECTORIZE: makeVectorizeMock({ query: vi.fn(async (): Promise<any> => ({ matches: [] })) }),
     AI: { run: vi.fn(async (model: string, opts: any) => {
-      if (model.startsWith("@cf/baai/bge")) return { data: [new Array(384).fill(0.1)] };
+      if (isEmbeddingCall(model)) return { data: [new Array(384).fill(0.1)] };
       const prompt = String(opts?.messages?.[0]?.content ?? "");
       if (prompt.includes("write a single cohesive paragraph")) {
         await sqlite.db.prepare("UPDATE entries SET content = ?, tags = ? WHERE id = ?")

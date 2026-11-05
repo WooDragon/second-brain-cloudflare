@@ -454,8 +454,10 @@ describe("recall root selection", () => {
     await recallEntries({ query: "why ledger", topK: 5, synthesize: false }, env, ctx, undefined, { diagnostics });
 
     expect(env.AI.run).toHaveBeenCalledTimes(1);
+    // The recall path embeds as a search query: an asymmetric model gets `queries`, so the
+    // query vector lands on the query side of the pair rather than the document side.
     expect(env.AI.run).toHaveBeenCalledWith(DEFAULTS.EMBEDDING_MODEL, {
-      text: [expectedInput[DEFAULT_EMBEDDING_QUERY_MODE]],
+      queries: [expectedInput[DEFAULT_EMBEDDING_QUERY_MODE]],
     });
     expect(diagnostics.embeddingMode).toBe(DEFAULT_EMBEDDING_QUERY_MODE);
   });
@@ -471,7 +473,7 @@ describe("recall root selection", () => {
     const env = makeTestEnv(db, { VECTORIZE: makeVectorizeMock({ query }) });
 
     await recallEntries({ query: "why ledger", topK: 5, synthesize: false }, env, ctx, undefined, { embeddingQueryMode });
-    expect(env.AI.run).toHaveBeenCalledWith(DEFAULTS.EMBEDDING_MODEL, { text: [expectedInput] });
+    expect(env.AI.run).toHaveBeenCalledWith(DEFAULTS.EMBEDDING_MODEL, { queries: [expectedInput] });
     expect(query).toHaveBeenCalledTimes(1);
     expect((env.AI.run as ReturnType<typeof vi.fn>).mock.calls.map(call => call[0])).toEqual([DEFAULTS.EMBEDDING_MODEL]);
   });

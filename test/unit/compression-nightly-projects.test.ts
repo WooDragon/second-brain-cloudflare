@@ -14,6 +14,7 @@ import { createProject, updateProject } from "../../src/projects/registry";
 import { makeMemoryKV, makeTestEnv } from "../helpers/make-env";
 import { makeSqliteD1, type SqliteD1 } from "../helpers/sqlite-d1";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const WS = "ws-a";
 const OTHER_WS = "ws-b";
@@ -29,7 +30,7 @@ function digestAI() {
   });
   return {
     run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-      if (model.startsWith("@cf/baai/bge")) return { data: [new Array(384).fill(0.1)] };
+      if (isEmbeddingCall(model)) return { data: [new Array(384).fill(0.1)] };
       if (opts?.stream) return sse("A digest of the memories.");
       return { response: "3" };
     }),

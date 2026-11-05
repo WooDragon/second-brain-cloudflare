@@ -34,6 +34,17 @@ export const listCorpora = (): string[] => [...CORPUS_IDS, ...providers.filter(p
 const slug = (model: string) => model.split("/").pop()!;
 
 /**
+ * The embedding model the committed core corpora, replay layers and baselines were
+ * recorded with.
+ *
+ * Deliberately NOT `DEFAULTS.EMBEDDING_MODEL`: that is whatever the Worker ships today
+ * and may move (the downstream default is qwen3-embedding), while these assets are
+ * immutable history. A run that reads them has to ask for the model they were recorded
+ * under, or it looks for `core-1k.<current-model>.json` and finds nothing.
+ */
+export const CORE_CORPUS_EMBEDDING_MODEL = "@cf/baai/bge-small-en-v1.5";
+
+/**
  * read lists only cache files that exist, so an empty read means nothing has been recorded and callers,
  * including Task 11's skipIf guards, can test read.length. write is always a file under .eval-cache/replay.
  * Core corpora share <slug>.jsonl and also read the committed core cache. Every other corpus (public, and any

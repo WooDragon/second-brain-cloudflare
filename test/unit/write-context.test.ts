@@ -20,7 +20,7 @@ import { OWNER_WRITE_CONTEXT } from "../../src/lib/scope";
 function makeEmbedAI(): Ai {
   return {
     run: vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       // Non-embedding calls are the classifier, whose failures are non-fatal;
       // rejecting keeps the fixture minimal without affecting what we assert.
       throw new Error("no LLM in this fixture");

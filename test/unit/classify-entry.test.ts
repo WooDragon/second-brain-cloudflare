@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { classifyEntry } from "../../src/capture/classify";
 import { makeTestDb, makeTestEnv } from "../helpers/make-env";
 import type { Env } from "../../src/env";
+import { DEFAULTS } from "../../src/config";
 
 function makeSseStream(response: string) {
   return new ReadableStream({
@@ -16,7 +17,7 @@ function makeSseStream(response: string) {
 function makeClassifyAI(response: string | null = null, shouldThrow = false) {
   return {
     run: vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5")
+      if (model === DEFAULTS.EMBEDDING_MODEL)
         return { data: [new Array(384).fill(0.1)] };
       if (shouldThrow) throw new Error("AI failure");
       return makeSseStream(response ?? "");

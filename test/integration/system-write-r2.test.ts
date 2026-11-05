@@ -5,6 +5,8 @@ import { resetDatabaseInit, initializeDatabase } from "../../src/db/init";
 import { makeTestEnv, makeMemoryKV, makeVectorizeMock } from "../helpers/make-env";
 import { makeSqliteD1, type SqliteD1 } from "../helpers/sqlite-d1";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
+import { embeddedTexts } from "../helpers/embedding";
 
 const DAY = 86400000;
 let now = 400 * DAY;
@@ -21,8 +23,8 @@ function makeAI(decision: () => string) {
   return {
     run: vi.fn().mockImplementation(async (model: string, opts: any) => {
       // R20's batchEmbeds sends every chunk in one call: answer with one vector per requested text.
-      if (model.startsWith("@cf/baai/bge")) {
-        const texts = Array.isArray(opts?.text) ? opts.text : [opts?.text];
+      if (isEmbeddingCall(model)) {
+        const texts = embeddedTexts(opts);
         return { data: texts.map(() => new Array(384).fill(0.1)) };
       }
       const prompt = String(opts?.messages?.[0]?.content ?? "");

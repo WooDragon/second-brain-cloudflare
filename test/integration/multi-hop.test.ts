@@ -3,6 +3,7 @@ import { recallEntries } from "../../src/recall/search";
 import { makeTestEnv, makeTestDb, makeVectorizeMock } from "../helpers/make-env";
 import type { Env } from "../../src/env";
 import { D1Mock } from "../helpers/d1-mock";
+import { DEFAULTS } from "../../src/config";
 
 function makeCtx() {
   const pending: Promise<any>[] = [];
@@ -242,7 +243,7 @@ describe("multi-hop recall (issue #16)", () => {
 
     const models = (testEnv: Env) => (testEnv.AI.run as ReturnType<typeof vi.fn>).mock.calls.map(call => call[0]);
     expect(models(graphEnv)).toEqual(models(directEnv));
-    expect(models(graphEnv)).toEqual(["@cf/baai/bge-small-en-v1.5"]);
+    expect(models(graphEnv)).toEqual([DEFAULTS.EMBEDDING_MODEL]);
   });
 
   it("keeps a hop-2 answer's root score when the hop-1 bridge is filtered from hydration", async () => {

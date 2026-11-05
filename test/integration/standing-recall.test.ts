@@ -23,8 +23,9 @@ import type { Identity } from "../../src/lib/identity";
 import worker from "../../src/index";
 import { resetDatabaseInit, initializeDatabase } from "../../src/db/init";
 import { ensureTenantBootstrap } from "../../src/lib/tenancy";
+import { isEmbeddingCall, embeddedTexts } from "../helpers/embedding";
 
-const DIM = 384;
+const DIM = DEFAULTS.EMBEDDING_DIM;
 const pad = (xy: number[]): number[] => [...xy, ...new Array(DIM - xy.length).fill(0)];
 const ON_TOPIC = pad([1, 0]);
 
@@ -33,8 +34,8 @@ const ON_TOPIC = pad([1, 0]);
 // only whether the standing text embeds close to (or, unused here, far from) the cached items.
 function aiFor(vector: number[] = ON_TOPIC) {
   const run = vi.fn(async (model: string, input?: { text?: string | string[] }) => {
-    if (typeof model === "string" && model.startsWith("@cf/baai/bge")) {
-      const texts = Array.isArray(input?.text) ? input!.text : [input?.text as string];
+    if (typeof model === "string" && isEmbeddingCall(model)) {
+      const texts = embeddedTexts(input);
       return { data: texts.map(() => vector) };
     }
     throw new Error(`unexpected AI.run model in standing-recall test: ${model}`);

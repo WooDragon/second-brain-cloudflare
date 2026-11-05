@@ -24,7 +24,7 @@ function makeAI(decision: string, settleCalls = Infinity) {
     run: vi.fn().mockImplementation(async (model: string) => {
       calls++;
       if (calls > settleCalls) return new Promise(() => {});
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       return new ReadableStream({
         start(c) {
           c.enqueue(new TextEncoder().encode(`data: {"response":${JSON.stringify(decision)}}\n\n`));

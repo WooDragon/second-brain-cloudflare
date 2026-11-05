@@ -327,7 +327,7 @@ describe("upgrade from a 3.7.0-shaped database", () => {
     const mergedContent = "I prefer dark mode, especially at night";
     const ai = {
       run: vi.fn().mockImplementation(async (model: string) => {
-        if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+        if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
         const response = JSON.stringify({ action: "merge", target_id: "e1", merged_content: mergedContent });
         return new ReadableStream({
           start(c) {

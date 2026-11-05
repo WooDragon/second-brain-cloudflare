@@ -124,7 +124,12 @@ export function observeRecallEnv(env: Env, diagnostics: RecallDiagnostics): Env 
     AI: observeMethods(env.AI, {
       run: (_model: unknown, input: unknown) => {
         operations.aiCalls += 1;
-        if (input && typeof input === "object" && Array.isArray((input as { text?: unknown }).text)) {
+        // An embedding call carries texts under `text` for the symmetric models and under
+        // `queries`/`documents` for the asymmetric ones (see embedInput in src/lib/ai.ts).
+        // Counting only `text` would report zero embeddings for any asymmetric model.
+        const body = input as { text?: unknown; queries?: unknown; documents?: unknown } | null;
+        if (body && typeof body === "object"
+          && (Array.isArray(body.text) || Array.isArray(body.queries) || Array.isArray(body.documents))) {
           operations.embeddingCalls += 1;
         }
       },

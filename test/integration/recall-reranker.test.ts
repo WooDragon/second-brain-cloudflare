@@ -10,6 +10,7 @@ import type { RecallDiagnostics } from "../../src/recall/types";
 import { TAG_VOCABULARY_KEY } from "../../src/tags/vocabulary";
 import { makeMemoryKV, makeTestEnv, makeVectorizeMock } from "../helpers/make-env";
 import { makeSqliteD1, type SqliteD1 } from "../helpers/sqlite-d1";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 type Scorer = (contexts: { text: string }[]) => unknown;
 const IDS = ["m0", "m1", "m2", "m3", "m4", "m5"];
@@ -39,7 +40,7 @@ describe("recall reranker step", () => {
         if (o.scorer === "hang") return new Promise(() => {});
         return (o.scorer ?? ((c: { text: string }[]) => ({ response: c.map((_, id) => ({ id, score: id })) })))(input.contexts);
       }
-      if (model.startsWith("@cf/baai/bge")) return { data: [new Array(384).fill(0.1)] };
+      if (isEmbeddingCall(model)) return { data: [new Array(384).fill(0.1)] };
       return new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode('data: {"response":"3"}\n\n')); c.enqueue(new TextEncoder().encode("data: [DONE]\n\n")); c.close(); } });
     });
     const matches = [

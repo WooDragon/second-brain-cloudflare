@@ -20,6 +20,7 @@ import { makeMemoryKV, makeTestEnv, makeVectorizeMock } from "../helpers/make-en
 import { makeSqliteD1, type SqliteD1 } from "../helpers/sqlite-d1";
 import type { Identity } from "../../src/lib/identity";
 import { initializeDatabase, resetDatabaseInit } from "../../src/db/init";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 function insertEntry(sqlite: SqliteD1, opts: {
   id: string; content?: string; tags?: string[]; workspaceId?: string; actorId?: string; createdAt?: number;
@@ -138,7 +139,7 @@ describe("standing invalidation: captureEntry and appendToEntry (lane W's files)
     c.enqueue(new TextEncoder().encode("data: [DONE]\n\n")); c.close();
   } });
   const decisionAI = (decision: string) =>
-    ({ run: vi.fn(async (model: string) => model.startsWith("@cf/baai/bge") ? { data: [new Array(384).fill(0.1)] } : stream(decision)) }) as unknown as Ai;
+    ({ run: vi.fn(async (model: string) => isEmbeddingCall(model) ? { data: [new Array(384).fill(0.1)] } : stream(decision)) }) as unknown as Ai;
 
   it("merge into an already-standing target touches the cache, even when the incoming capture is not itself tagged standing", async () => {
     const { sqlite, kv } = await setup();

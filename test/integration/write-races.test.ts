@@ -11,6 +11,7 @@ import { appendToEntry, updateEntryContent } from "../../src/capture/store";
 import { captureEntry } from "../../src/capture/entry";
 import { DEFAULTS } from "../../src/config";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const ctx = { waitUntil: () => {} } as unknown as ExecutionContext;
 const change = { actorId: "u1", channel: "rest" as const };
@@ -104,7 +105,7 @@ describe("write races: re-embed ordering (T-0089.10)", () => {
     await seed("e1", "same text", ["a"]);
     let embeds = 0;
     const countingAI = { run: vi.fn(async (model: string, opts: any) => {
-      if (model.startsWith("@cf/baai/bge")) { embeds++; return { data: [new Array(384).fill(0.1)] }; }
+      if (isEmbeddingCall(model)) { embeds++; return { data: [new Array(384).fill(0.1)] }; }
       return new ReadableStream({ start(c) { c.close(); } });
     }) } as unknown as Ai;
     const countingEnv = { ...env, AI: countingAI } as unknown as Env;
@@ -132,7 +133,7 @@ describe("write races: re-embed ordering (T-0089.10)", () => {
         upsert: vi.fn(async (vs: any[]): Promise<any> => { for (const v of vs) store.set(v.id, v); return { mutationId: "m" }; }),
         deleteByIds: vi.fn(async (ids: string[]): Promise<any> => { deleted.push(...ids); return { mutationId: "m" }; }),
       }),
-      AI: { run: vi.fn(async (model: string) => model.startsWith("@cf/baai/bge") ? { data: [new Array(384).fill(0.1)] } : stream(decision)) } as any,
+      AI: { run: vi.fn(async (model: string) => isEmbeddingCall(model) ? { data: [new Array(384).fill(0.1)] } : stream(decision)) } as any,
     }) as Env;
     await d1.db.prepare(
       `INSERT INTO entries (id, content, tags, source, created_at, updated_at, vector_ids, workspace_id, actor_id) VALUES ('old', 'original', '["work"]', 'api', 1000, NULL, '["old"]', '', 'u1')`,
@@ -177,7 +178,7 @@ describe("write races: re-embed ordering (T-0089.10)", () => {
         upsert: vi.fn(async (): Promise<any> => ({ mutationId: "m" })),
         deleteByIds: vi.fn(async (): Promise<any> => ({ mutationId: "m" })),
       }),
-      AI: { run: vi.fn(async (model: string) => model.startsWith("@cf/baai/bge") ? { data: [new Array(384).fill(0.1)] } : stream(decision)) } as any,
+      AI: { run: vi.fn(async (model: string) => isEmbeddingCall(model) ? { data: [new Array(384).fill(0.1)] } : stream(decision)) } as any,
     }) as Env;
     const db = raceEnv.DB as any;
     const prepare = db.prepare.bind(db);
@@ -298,7 +299,7 @@ describe("write races: stale classify tags (T-0089.10)", () => {
     } });
     const classifyingEnv = makeTestEnv(undefined, {
       DB: d1.db as any, OAUTH_KV: makeMemoryKV(), VECTORIZE: statefulVectorize(),
-      AI: { run: vi.fn(async (model: string) => model.startsWith("@cf/baai/bge")
+      AI: { run: vi.fn(async (model: string) => isEmbeddingCall(model)
         ? { data: [new Array(384).fill(0.1)] }
         : stream(JSON.stringify({ importance: 3, canonical: true, kind: "semantic" }))) } as any,
     }) as Env;

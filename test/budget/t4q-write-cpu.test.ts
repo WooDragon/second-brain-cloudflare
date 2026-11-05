@@ -17,6 +17,7 @@ import { initializeDatabase, resetDatabaseInit } from "../../src/db/init";
 import { ensureTenantBootstrap } from "../../src/lib/tenancy";
 import { makeMemoryKV, makeTestEnv, makeVectorizeMock } from "../helpers/make-env";
 import { makeSqliteD1 } from "../helpers/sqlite-d1";
+import { isEmbeddingCall, embeddedTexts } from "../helpers/embedding";
 
 const SCEN = process.env.T4Q_SCEN ?? "";
 const CAP_MS = 10;
@@ -49,8 +50,8 @@ const d1Tally = { ms: 0 };
 /** One vector per input text, the shape Workers AI returns for a batch. */
 function aiMock(): Ai {
   return { run: async (model: string, input: any) => {
-    if (model.startsWith("@cf/baai/bge")) {
-      const texts = Array.isArray(input?.text) ? input.text : [input?.text];
+    if (isEmbeddingCall(model)) {
+      const texts = embeddedTexts(input);
       return { data: texts.map(() => Array.from({ length: 384 }, (_, i) => (i % 7) / 10)) };
     }
     return new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode('data: {"response":"{\\"kind\\":\\"semantic\\",\\"tags\\":[]}"}\n\ndata: [DONE]\n\n')); c.close(); } });

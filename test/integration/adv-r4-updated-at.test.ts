@@ -15,6 +15,7 @@ import { importExportPayload } from "../../src/entries/import";
 import { runStalenessPass } from "../../src/staleness/pass";
 import { DEFAULTS } from "../../src/config";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 let sqlite: SqliteD1;
 let env: Env;
@@ -36,7 +37,7 @@ beforeEach(async () => {
     DB: sqlite.db as unknown as Env["DB"], OAUTH_KV: makeMemoryKV(),
     VECTORIZE: makeVectorizeMock({ query: vi.fn(async (): Promise<any> => ({ matches: [] })) }),
     AI: { run: vi.fn(async (model: string, opts: any) => {
-      if (model.startsWith("@cf/baai/bge")) return { data: [new Array(384).fill(0.1)] };
+      if (isEmbeddingCall(model)) return { data: [new Array(384).fill(0.1)] };
       const prompt = String(opts?.messages?.[0]?.content ?? "");
       if (prompt.includes("write a single cohesive paragraph")) {
         // The digest has read its sources and is synthesizing: a user edit lands now.

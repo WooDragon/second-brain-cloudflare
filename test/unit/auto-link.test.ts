@@ -3,6 +3,7 @@ import { captureEntry } from "../../src/capture/entry";
 import { makeTestDb, makeTestEnv, makeVectorizeMock } from "../helpers/make-env";
 import type { Env } from "../../src/env";
 import { D1Mock } from "../helpers/d1-mock";
+import { DEFAULTS } from "../../src/config";
 
 // Collects waitUntil promises so we can await the fire-and-forget auto-link.
 function makeCtx() {
@@ -17,7 +18,7 @@ function makeCtx() {
 function makeAI(verdict: string) {
   return {
     run: vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       return new ReadableStream({
         start(c) {
           c.enqueue(new TextEncoder().encode(`data: {"response":${JSON.stringify(verdict)}}\n\n`));

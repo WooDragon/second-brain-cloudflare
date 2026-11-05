@@ -5,6 +5,7 @@ import { resetDatabaseInit, initializeDatabase } from "../../src/db/init";
 import { makeTestEnv, makeMemoryKV, makeVectorizeMock } from "../helpers/make-env";
 import { makeSqliteD1 } from "../helpers/sqlite-d1";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const DAY = 86400000;
 const ctx = { waitUntil: () => {} } as unknown as ExecutionContext;
@@ -28,7 +29,7 @@ describe("held drafts", () => {
         return { matches: [...held.map(r => ({ id: r.id, score: 0.9, metadata: { parentId: r.id } })), { id: "user-row", score: 0.8, metadata: { parentId: "user-row" } }] };
       }) }),
       AI: { run: vi.fn(async (model: string, opts: any) => {
-        if (model.startsWith("@cf/baai/bge")) return { data: [new Array(384).fill(0.1)] };
+        if (isEmbeddingCall(model)) return { data: [new Array(384).fill(0.1)] };
         const p = String(opts?.messages?.[0]?.content ?? "");
         if (p.includes("Choose exactly one action")) return stream('{"action":"contradiction","conflicting_id":"user-row","reason":"changed"}');
         if (p.includes("checking if a new memory contradicts")) return stream('{"contradicts":true,"conflicting_id":"user-row","reason":"changed"}');
@@ -80,7 +81,7 @@ describe("held drafts", () => {
       DB: sqlite.db as any, OAUTH_KV: makeMemoryKV(),
       VECTORIZE: makeVectorizeMock({ query: vi.fn(async (): Promise<any> => ({ matches: [] })) }),
       AI: { run: vi.fn(async (model: string, opts: any) => {
-        if (model.startsWith("@cf/baai/bge")) return { data: [new Array(384).fill(0.1)] };
+        if (isEmbeddingCall(model)) return { data: [new Array(384).fill(0.1)] };
         // The person shares one source to another workspace while the digest is being written.
         sqlite.db.prepare(`UPDATE entries SET workspace_id = 'company-ws' WHERE id = 'w-0'`).run();
         return opts?.stream ? stream("A digest of the work memories.") : { response: "3" };

@@ -20,6 +20,7 @@ import { ensureTenantBootstrap } from "../../src/lib/tenancy";
 import { resolveIdentityByUserId, type Identity } from "../../src/lib/identity";
 import { makeAIMock, makeMemoryKV, makeTestEnv, makeVectorizeMock } from "../helpers/make-env";
 import { makeSqliteD1, type SqliteD1 } from "../helpers/sqlite-d1";
+import { isEmbeddingCall, embeddedTexts } from "../helpers/embedding";
 
 let sqlite: SqliteD1;
 let env: Env;
@@ -117,8 +118,8 @@ describe("budget auditor R20 (T-0089.4.2, T-0089.5.9): a single Release stays we
     let aiCalls = 0;
     const ai = { run: vi.fn(async (model: string, input: any) => {
       aiCalls++;
-      if (model.startsWith("@cf/baai/bge")) {
-        const list = Array.isArray(input?.text) ? input.text : [input?.text];
+      if (isEmbeddingCall(model)) {
+        const list = embeddedTexts(input);
         return { data: list.map(() => new Array(384).fill(0.1)) };
       }
       return { response: "ok" };

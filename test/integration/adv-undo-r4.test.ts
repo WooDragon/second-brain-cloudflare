@@ -18,6 +18,7 @@ import { D1_ROW_MAX_BYTES } from "../../src/constants";
 import { revertEntry } from "../../src/memory/undo";
 import { DEFAULTS } from "../../src/config";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall, embeddedTexts } from "../helpers/embedding";
 
 const ctx = { waitUntil: () => {} } as unknown as ExecutionContext;
 const stream = (text: string) => new ReadableStream({ start(c) {
@@ -42,7 +43,7 @@ function statefulVectorize(matchId?: string) {
   return makeVectorizeMock(overrides as any);
 }
 const decisionAI = (decision: string) =>
-  ({ run: vi.fn(async (model: string) => model.startsWith("@cf/baai/bge") ? { data: [new Array(384).fill(0.1)] } : stream(decision)) }) as any;
+  ({ run: vi.fn(async (model: string) => isEmbeddingCall(model) ? { data: [new Array(384).fill(0.1)] } : stream(decision)) }) as any;
 
 beforeEach(async () => {
   resetDatabaseInit();
@@ -88,7 +89,7 @@ function beforeRevertBatch(base: Env, race: () => Promise<void>): Env {
 /** A merge decider whose merged text is the target's current text plus the incoming capture, like a real merge. */
 function mergingEnv(target: string) {
   const ai = { run: vi.fn(async (model: string, input: any) => {
-    if (model.startsWith("@cf/baai/bge")) return { data: (Array.isArray(input?.text) ? input.text : [input?.text]).map(() => new Array(384).fill(0.1)) };
+    if (isEmbeddingCall(model)) return { data: (embeddedTexts(input)).map(() => new Array(384).fill(0.1)) };
     return stream(JSON.stringify({ action: "merge", target_id: target, merged_content: `${currentContent(target)} ${pending.shift() ?? ""}` }));
   }) } as any;
   return makeTestEnv(undefined, { DB: sqlite.db as any, OAUTH_KV: makeMemoryKV(), VECTORIZE: statefulVectorize(target), AI: ai }) as Env;

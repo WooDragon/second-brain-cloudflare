@@ -5,6 +5,8 @@ import { runNightlyVectorizePending, VECTORIZE_PENDING_NIGHTLY_EMBEDS, VECTORIZE
 import { chunkText } from "../../src/text/chunk";
 import { DEFAULTS } from "../../src/config";
 import { D1_ROW_MAX_BYTES } from "../../src/constants";
+import { embeddedTexts } from "../helpers/embedding";
+import { embedBatchSize } from "../../src/lib/ai";
 
 // T-0089.1.1 close-out round 3: the nightly pass indexes EVERY eligible row whatever its size. The
 // oldest row always gets the night (all of it if it needs more than the budget); others share
@@ -49,8 +51,10 @@ describe("nightly vectorize-pending: rows of any size", () => {
     await runNightlyVectorizePending(env, DEFAULTS);
     expect(await indexed("big")).toBe(true);
     expect(JSON.parse((await t.one<{ vector_ids: string }>(`SELECT vector_ids FROM entries WHERE id = 'big'`))!.vector_ids)).toHaveLength(chunks);
-    // ceil(chunks / 100) AI calls, one Vectorize upsert, the candidate read, the content read, one write batch.
-    expect(count()).toBeLessThanOrEqual(Math.ceil(chunks / 100) + 1 + 3);
+    // ceil(chunks / batchSize) AI calls, one Vectorize upsert, the candidate read, the
+    // content read, one write batch. The batch size is a property of the shipped model
+    // (100 for the bge-en family, 25 for the others), so ask for it rather than assume it.
+    expect(count()).toBeLessThanOrEqual(Math.ceil(chunks / embedBatchSize(DEFAULTS.EMBEDDING_MODEL)) + 1 + 3);
   });
 
   it("a legacy row over the 128 KB cap is skipped with one log line a night, takes no slot, and blocks nothing", async () => {
@@ -60,7 +64,7 @@ describe("nightly vectorize-pending: rows of any size", () => {
     for (let i = 0; i < 12; i++) t.seed(`s${i}`, { content: `small fact ${i}`, created_at: OLD + i });
     const embedded: string[] = [];
     const run = t.env.AI.run.bind(t.env.AI);
-    (t.env.AI as any).run = async (m: string, input: any) => { embedded.push(...(Array.isArray(input?.text) ? input.text : [input?.text])); return run(m, input); };
+    (t.env.AI as any).run = async (m: string, input: any) => { embedded.push(...(embeddedTexts(input))); return run(m, input); };
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     await runNightlyVectorizePending(t.env, DEFAULTS);
     // Ten small rows get the ten slots: the legacy row took none of them and embedded nothing.

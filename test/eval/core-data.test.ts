@@ -13,6 +13,7 @@ import { CORPUS_IDS, CORPUS_PARAMS, HAYSTACK_ROWS, buildCorpus as buildCorpusUnc
 import { COMMON_TOKENS, CORRELATED_TOKENS, DENSE_RATE_BY_SCALE, DENSE_TOKENS } from "./corpus/haystack";
 import { IDENTITIES, WORKSPACES } from "./corpus/types";
 import { QUERY_CATEGORIES } from "./types";
+import { CORE_CORPUS_EMBEDDING_MODEL } from "./corpora";
 
 // Each corpus is built once for the whole file: the tests only read it, and building one per test (about 25
 // builds, the 20k one the largest) is what pushed single tests past the 5 s default under load.
@@ -110,7 +111,7 @@ describe("core golden data", () => {
   it("keeps every committed replay layer together within its size budget", () => {
     // the privacy allowlist admits replay.<model>.jsonl.gz for any model, so the cap is on their sum (a bge-m3 layer counts too)
     const layers = readdirSync(DATA).filter(name => /^replay\.[\w.-]+\.jsonl\.gz$/.test(name));
-    expect(layers).toContain(`replay.${DEFAULTS.EMBEDDING_MODEL.split("/").pop()}.jsonl.gz`);
+    expect(layers).toContain(`replay.${CORE_CORPUS_EMBEDDING_MODEL.split("/").pop()}.jsonl.gz`);
     const bytes = layers.reduce((sum, name) => sum + statSync(resolve(DATA, name)).size, 0);
     expect(bytes).toBeLessThan(9 * 1024 * 1024);
   });

@@ -17,6 +17,7 @@ import { makeMirrorStore } from "../../src/integrations/mirror";
 import { canRevert, loadHistory } from "../../src/memory/versions";
 import { DEFAULTS } from "../../src/config";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 let sqlite: SqliteD1;
 let env: Env;
@@ -218,7 +219,7 @@ describe("versioning: insight resolution (A2)", () => {
 
 describe("versioning: digest rollup and mirror", () => {
   function digestAI(text = "Synthesized text") {
-    return { run: vi.fn(async (model: string) => model.startsWith("@cf/baai/bge")
+    return { run: vi.fn(async (model: string) => isEmbeddingCall(model)
       ? { data: [new Array(384).fill(0.1)] }
       : new ReadableStream({ start(c) {
         c.enqueue(new TextEncoder().encode(`data: {"response":${JSON.stringify(text)}}\n\n`));

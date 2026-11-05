@@ -18,6 +18,7 @@ import { makeMemoryKV, makeVectorizeMock } from "../helpers/make-env";
 import type { Env } from "../../src/env";
 import { initializeDatabase, resetDatabaseInit } from "../../src/db/init";
 import { captureEntry } from "../../src/capture/entry";
+import { DEFAULTS } from "../../src/config";
 
 function makeCtx(): ExecutionContext {
   return { waitUntil: () => {} } as unknown as ExecutionContext;
@@ -41,7 +42,7 @@ function makeSseStream(response: string) {
 function makeContradictionAI(response: string) {
   return {
     run: vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       return makeSseStream(response);
     }),
   } as unknown as Ai;

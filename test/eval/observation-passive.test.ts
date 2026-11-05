@@ -9,11 +9,11 @@ import { ReplayStore, makeReplayAi } from "./ai-replay";
 import { buildCorpus } from "./corpus/build";
 import { loadCorpus } from "./corpus/loader";
 import { EVAL_NOW, IDENTITIES } from "./corpus/types";
-import { replayPaths } from "./corpora";
+import { CORE_CORPUS_EMBEDDING_MODEL, replayPaths } from "./corpora";
 import { EVAL_TOP_K, freezeClock, withoutRecallCountWrites } from "./runner";
 import { EVAL_FULL } from "./full";
 
-const MODEL = DEFAULTS.EMBEDDING_MODEL;
+const MODEL = CORE_CORPUS_EMBEDDING_MODEL;
 const ctx = { waitUntil: () => {} } as unknown as ExecutionContext;
 
 // The eval always observes (diagnostics on); production does not. Observation must be purely passive, or the eval's

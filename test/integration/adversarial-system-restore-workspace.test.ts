@@ -4,6 +4,7 @@ import { makeSqliteD1 } from "../helpers/sqlite-d1";
 import { makeTestEnv, makeMemoryKV, makeVectorizeMock } from "../helpers/make-env";
 import { resetDatabaseInit, initializeDatabase } from "../../src/db/init";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const stream = (text: string) => new ReadableStream({ start(c) {
   c.enqueue(new TextEncoder().encode(`data: {"response":${JSON.stringify(text)}}\n\n`));
@@ -32,7 +33,7 @@ it("a lost system merge into a row that moved leaves the row's own vectors liste
     DB: sqlite.db as unknown as Env["DB"], OAUTH_KV: makeMemoryKV(),
     VECTORIZE: makeVectorizeMock({ query: vi.fn(async (): Promise<any> => ({ matches: [{ id: "target", score: 0.9, metadata: { parentId: "target" } }] })) }),
     AI: { run: vi.fn(async (model: string, opts: any) => {
-      if (model.startsWith("@cf/baai/bge")) {
+      if (isEmbeddingCall(model)) {
         if (restoreEmbedFails) throw new Error("local embed failure");
         return { data: [new Array(384).fill(0.1)] };
       }

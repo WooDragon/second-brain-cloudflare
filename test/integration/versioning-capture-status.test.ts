@@ -13,6 +13,7 @@ import { makeTestEnv, makeMemoryKV, makeVectorizeMock } from "../helpers/make-en
 import { makeSqliteD1, type SqliteD1 } from "../helpers/sqlite-d1";
 import { req } from "../helpers/make-request";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const ctx = { waitUntil: () => {} } as unknown as ExecutionContext;
 const stream = (text: string) => new ReadableStream({ start(c) {
@@ -38,7 +39,7 @@ async function setup(score: number, decision: string) {
       query: vi.fn().mockResolvedValue({ matches: [{ id: "old", score, metadata: { parentId: "old" } }] }),
       deleteByIds,
     }),
-    AI: { run: vi.fn(async (model: string) => model.startsWith("@cf/baai/bge") ? { data: [new Array(384).fill(0.1)] } : stream(decision)) } as any,
+    AI: { run: vi.fn(async (model: string) => isEmbeddingCall(model) ? { data: [new Array(384).fill(0.1)] } : stream(decision)) } as any,
   }) as Env;
   await initializeDatabase(env);
 }

@@ -8,6 +8,7 @@ import { D1Mock } from "../helpers/d1-mock";
 import { tagsAfterAppend, tagsAfterWrite, STALE_AS_OF } from "../../src/memory/stale";
 import { getVolatility } from "../../src/memory/volatility";
 import { runStalenessPass, STALENESS_AGE_MS } from "../../src/staleness/pass";
+import { DEFAULTS } from "../../src/config";
 
 const ctx = { waitUntil: (_: Promise<any>) => {} } as any;
 
@@ -22,7 +23,7 @@ function makeCtx() {
 function makeContradictionAI(response: string) {
   return {
     run: vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       return new ReadableStream({
         start(c) {
           c.enqueue(new TextEncoder().encode(`data: {"response":${JSON.stringify(response)}}\n\n`));

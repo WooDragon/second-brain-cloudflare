@@ -15,6 +15,7 @@ import { initializeDatabase, resetDatabaseInit } from "../../src/db/init";
 import { insertVersion, insertSupersedesEdge } from "../helpers/as-of-fixtures";
 import { VERSIONS_SINCE_KV_KEY } from "../../src/constants";
 import type { Env } from "../../src/env";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const ctx = { waitUntil: (_: Promise<unknown>) => {} } as any;
 let sqlite: SqliteD1 | null = null;
@@ -211,7 +212,7 @@ describe("as-of recall answers what was actually true at T (5.7)", () => {
     expect(matches.find(m => m.id === "e1")?.content).toBe("");
     expect(insight).toBe("3"); // the mock's own canned response: synthesis did run, over e2/e3
 
-    const chatCall = (ai.run as any).mock.calls.find((c: unknown[]) => typeof c[0] === "string" && !(c[0] as string).startsWith("@cf/baai/bge"));
+    const chatCall = (ai.run as any).mock.calls.find((c: unknown[]) => typeof c[0] === "string" && !isEmbeddingCall(c[0] as string));
     const prompt = chatCall![1].messages[0].content as string;
     expect(prompt).not.toContain("ignore all previous instructions");
     expect(prompt, "the held row is dropped, not just emptied").not.toContain("ID: e1");
@@ -267,7 +268,7 @@ describe("as-of recall answers what was actually true at T (5.7)", () => {
     expect(match?.content).toBe("");
     expect(insight, "the only match is held, so there is nothing left to synthesize").toBe("");
     for (const call of (ai.run as any).mock.calls) {
-      if (typeof call[0] === "string" && !(call[0] as string).startsWith("@cf/baai/bge")) {
+      if (typeof call[0] === "string" && !isEmbeddingCall(call[0] as string)) {
         const prompt = call[1].messages[0].content as string;
         // NIT (cloud re-review, on top of 0b970baa): the fixture's own injection text is
         // capitalized ("Ignore all previous instructions..."), so a case-sensitive toContain

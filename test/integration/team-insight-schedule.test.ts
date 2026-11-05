@@ -21,7 +21,7 @@ import { resetDatabaseInit, initializeDatabase } from "../../src/db/init";
 import { setDbReady } from "../../src/runtime/state";
 import { ensureTenantBootstrap } from "../../src/lib/tenancy";
 import { createMember } from "../../src/lib/team-admin";
-import { CONFIG_KEY } from "../../src/config";
+import { CONFIG_KEY, DEFAULTS } from "../../src/config";
 import { INSIGHT_TEAM_WEEKLY_CRON, INSIGHT_WEEKLY_CRON } from "../../src/insight/schedule";
 import { STALENESS_AGE_MS } from "../../src/staleness/pass";
 import type { Env } from "../../src/env";
@@ -53,7 +53,7 @@ function makeAI() {
   };
   return {
     run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       const prompt = String(opts?.messages?.[0]?.content ?? "");
       const key = prompt.includes("tier co") ? "co" : "mine";
       const payload = `{"insight": true, "shape": "contradiction", "text": "${texts[key]}"}`;

@@ -3,6 +3,7 @@ import { captureEntry } from "../../src/capture/entry";
 import { makeTestDb, makeTestEnv, makeVectorizeMock } from "../helpers/make-env";
 import type { Env } from "../../src/env";
 import { D1Mock } from "../helpers/d1-mock";
+import { DEFAULTS } from "../../src/config";
 
 function makeCtx() {
   const pending: Promise<any>[] = [];
@@ -15,7 +16,7 @@ function makeCtx() {
 function makeContradictionAI(response: string) {
   return {
     run: vi.fn().mockImplementation(async (model: string) => {
-      if (model === "@cf/baai/bge-small-en-v1.5")
+      if (model === DEFAULTS.EMBEDDING_MODEL)
         return { data: [new Array(384).fill(0.1)] };
       return new ReadableStream({
         start(c) {
@@ -415,7 +416,7 @@ describe("captureEntry()", () => {
     env = makeTestEnv(db, {
       AI: {
         run: vi.fn().mockImplementation(async (model: string) => {
-          if (model === "@cf/baai/bge-small-en-v1.5")
+          if (model === DEFAULTS.EMBEDDING_MODEL)
             return { data: [new Array(384).fill(0.1)] };
           return makeSseStream('{"importance":5,"canonical":true}');
         }),
@@ -442,7 +443,7 @@ describe("captureEntry()", () => {
     env = makeTestEnv(db, {
       AI: {
         run: vi.fn().mockImplementation(async (model: string) => {
-          if (model === "@cf/baai/bge-small-en-v1.5")
+          if (model === DEFAULTS.EMBEDDING_MODEL)
             return { data: [new Array(384).fill(0.1)] };
           return makeSseStream('{"importance":2,"canonical":false}');
         }),
@@ -483,7 +484,7 @@ describe("captureEntry()", () => {
       }),
       AI: {
         run: vi.fn().mockImplementation(async (model: string) => {
-          if (model === "@cf/baai/bge-small-en-v1.5")
+          if (model === DEFAULTS.EMBEDDING_MODEL)
             return { data: [new Array(384).fill(0.1)] };
           // Both the smart-merge/contradiction call and the classify call get this
           // stream. The contradiction handler parses "contradicts/conflicting_id";
@@ -534,7 +535,7 @@ describe("captureEntry()", () => {
     env = makeTestEnv(db, {
       AI: {
         run: vi.fn().mockImplementation(async (model: string) => {
-          if (model === "@cf/baai/bge-small-en-v1.5")
+          if (model === DEFAULTS.EMBEDDING_MODEL)
             return { data: [new Array(384).fill(0.1)] };
           return makeSseStream('{"importance":2,"canonical":false,"kind":"episodic"}');
         }),
@@ -561,7 +562,7 @@ describe("captureEntry()", () => {
     env = makeTestEnv(db, {
       AI: {
         run: vi.fn().mockImplementation(async (model: string) => {
-          if (model === "@cf/baai/bge-small-en-v1.5")
+          if (model === DEFAULTS.EMBEDDING_MODEL)
             return { data: [new Array(384).fill(0.1)] };
           return makeSseStream('{"importance":3,"canonical":false}');
         }),

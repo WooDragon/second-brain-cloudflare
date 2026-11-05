@@ -59,7 +59,19 @@ export const TAG_BOOST_MAX = 1.5;
 // log1p(|net|) * this step, clamped to the [1,5] importance band. Tunable.
 export const CONTRADICTION_IMPORTANCE_STEP = 1.0;
 
-export const EMBEDDING_MODEL = "@cf/baai/bge-small-en-v1.5";
+// DOWNSTREAM(model): shipped default changed from bge-small-en-v1.5 for
+// multilingual quality — bge-small is English-only, and this brain is used in
+// Chinese as much as English. Must stay equal to DEFAULTS.EMBEDDING_MODEL
+// (src/config.ts), which test/unit/config-parity.test.ts asserts.
+export const EMBEDDING_MODEL = "@cf/qwen/qwen3-embedding-0.6b";
+
+// DOWNSTREAM(model): the output dimension of EMBEDDING_MODEL, and the one place
+// the number is written down. src/config.ts's DEFAULTS.EMBEDDING_DIM imports it,
+// and the user-facing index-repair hint below interpolates it, so a model swap
+// cannot leave either behind. Vectorize fixes an index's dimension at creation
+// time: changing this means creating a NEW index and re-embedding, never an edit
+// of the existing one.
+export const EMBEDDING_VECTOR_DIM = 1024;
 
 export const CHUNK_MAX_CHARS = 1600;
 // Vectorize's per-call ceiling for a Worker upsert.
@@ -132,7 +144,7 @@ export const WHEN_PASS_MAX_TOKENS = 1200;
 export const DIGEST_MAX_TOKENS = 400;
 
 export const VECTORIZE_FIX_HINT =
-  "run `npx wrangler vectorize create second-brain-vectors --dimensions=384 --metric=cosine`, or grant the build token Vectorize Edit and redeploy";
+  `run \`npx wrangler vectorize create second-brain-vectors --dimensions=${EMBEDDING_VECTOR_DIM} --metric=cosine\`, or grant the build token Vectorize Edit and redeploy`;
 
 // Shared by REST and MCP recall so the two never diverge in what they claim:
 // a failed Vectorize call does not establish WHY it failed, so the assertion

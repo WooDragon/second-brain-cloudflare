@@ -11,6 +11,7 @@ import { req } from "../helpers/make-request";
 import type { Env } from "../../src/env";
 import { D1Mock } from "../helpers/d1-mock";
 import { LLM_MODEL } from "../../src/constants";
+import { DEFAULTS } from "../../src/config";
 
 const ctx = { waitUntil: (_: Promise<any>) => {} } as any;
 
@@ -24,7 +25,7 @@ function makeTrackingAI(calls: string[]): Ai {
   return {
     run: vi.fn().mockImplementation(async (model: string) => {
       calls.push(model);
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       return new ReadableStream({
         start(c) {
           c.enqueue(new TextEncoder().encode(`data: {"response":"an insight about the memories"}\n\n`));

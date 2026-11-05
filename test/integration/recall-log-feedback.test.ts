@@ -8,7 +8,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildMcpServer } from "../../src/mcp/server";
 import worker from "../../src/index";
-import { CONFIG_KEY } from "../../src/config";
+import { CONFIG_KEY, DEFAULTS } from "../../src/config";
 import { makeSqliteD1, type SqliteD1 } from "../helpers/sqlite-d1";
 import { makeTestEnv, makeMemoryKV, makeVectorizeMock } from "../helpers/make-env";
 import { resetDatabaseInit, initializeDatabase } from "../../src/db/init";
@@ -50,7 +50,7 @@ describe("implicit feedback (MCP)", () => {
       }),
       AI: {
         run: vi.fn().mockImplementation(async (model: string) => {
-          if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+          if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
           return { response: '{"importance":2,"canonical":false,"kind":"semantic"}' };
         }),
       } as unknown as Ai,

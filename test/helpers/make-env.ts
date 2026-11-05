@@ -1,6 +1,7 @@
 import { vi } from "vitest";
 import { D1Mock } from "./d1-mock";
 import type { Env } from "../../src/env";
+import { embeddedTexts, embeddingVector, isEmbeddingCall } from "./embedding";
 
 export function makeVectorizeMock(overrides: Partial<VectorizeIndex> = {}): VectorizeIndex {
   const index: any = {
@@ -44,13 +45,15 @@ export function ownedBy(owners: Record<string, string>) {
 
 export function makeAIMock(): Ai {
   return {
-    run: vi.fn().mockImplementation(async (model: string, input?: { text?: string | string[] }) => {
-      // Every bge-* model here is an embedding call (bge-small is the
-      // shipped default; bge-base/large/m3 are config-selectable) — anything
-      // else is assumed to be an LLM chat completion, below.
-      // One vector per input text, as the real binding returns for a batch.
-      if (model.startsWith("@cf/baai/bge"))
-        return { data: (Array.isArray(input?.text) ? input.text : [input?.text]).map(() => new Array(384).fill(0.1)) };
+    run: vi.fn().mockImplementation(async (
+      model: string,
+      // Read every body shape an embedding call can use, so this mock does not have
+      // to know which shipped model is in force (see helpers/embedding.ts).
+      input?: { text?: string | string[]; queries?: string[]; documents?: string[] },
+    ) => {
+      // One vector per input text, as the real binding returns for a batch. Anything
+      // that is not an embedding family is assumed to be a chat completion, below.
+      if (isEmbeddingCall(model)) return { data: embeddedTexts(input).map(() => embeddingVector()) };
       return new ReadableStream({
         start(c) {
           c.enqueue(new TextEncoder().encode('data: {"response":"3"}\n\n'));

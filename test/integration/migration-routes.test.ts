@@ -13,7 +13,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDefaultHandler } from "../../src/routes/index";
 import { makeMemoryKV, makeTestDb, makeTestEnv } from "../helpers/make-env";
-import { CONFIG_KEY } from "../../src/config";
+import { CONFIG_KEY, DEFAULTS } from "../../src/config";
 import { MIGRATION_KEY } from "../../src/migration/embedding";
 import type { Env } from "../../src/env";
 
@@ -77,7 +77,7 @@ describe("migration routes", () => {
     // Named "at least" because the projection is a lower bound — the chunker's
     // sentence snapping can only produce more.
     expect(typeof body.chunksAtLeast).toBe("number");
-    expect(body.model).toBe("@cf/baai/bge-small-en-v1.5");
+    expect(body.model).toBe(DEFAULTS.EMBEDDING_MODEL);
   });
 
   it("reports the configured model, so the app can spot a stale ledger", async () => {

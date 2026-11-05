@@ -13,6 +13,10 @@
  * does nothing.
  */
 import type { Env } from "./env";
+// DOWNSTREAM(model): the dimension lives in constants.ts beside EMBEDDING_MODEL, because
+// the user-facing Vectorize repair hint there interpolates it and `constants` must not
+// import this module. Importing it back is the one direction that works without a cycle.
+import { EMBEDDING_VECTOR_DIM } from "./constants";
 
 // Prefixed to coexist with workers-oauth-provider's token:/grant:/client: keys
 // and the integrations: blobs in the same namespace.
@@ -102,7 +106,9 @@ export const DEFAULTS = {
 
   // ── Models (src/lib/ai.ts) ──
   LLM_MODEL: "@cf/meta/llama-4-scout-17b-16e-instruct",
-  EMBEDDING_MODEL: "@cf/baai/bge-small-en-v1.5",
+  // DOWNSTREAM(model): must stay equal to constants.EMBEDDING_MODEL —
+  // test/unit/config-parity.test.ts asserts the two are the same value.
+  EMBEDDING_MODEL: "@cf/qwen/qwen3-embedding-0.6b",
   // Used only by src/insight/reason.ts's pair-reasoning call — everything
   // else above keeps using LLM_MODEL. See the cost comment on
   // constants.INSIGHT_LLM_MODEL for why this is a separate setting.
@@ -192,10 +198,11 @@ export const DEFAULTS = {
   // Capacity, not a fixed cap: how many standing memories one workspace may hold at once
   // (Design 2.1 "the cap", 2.4's oldest-first cache build).
   STANDING_MAX: 50,
-  // Dimension of DEFAULTS.EMBEDDING_MODEL's vectors (bge-small-en-v1.5). Threaded explicitly
-  // into the standing cache codec/build rather than hard-coded there, so a future embedding
-  // model change updates both together.
-  EMBEDDING_DIM: 384,
+  // Dimension of DEFAULTS.EMBEDDING_MODEL's vectors. Threaded explicitly into the standing
+  // cache codec/build rather than hard-coded there, so a future embedding model change
+  // updates both together. DOWNSTREAM(model): sourced from constants.EMBEDDING_VECTOR_DIM so the
+  // model, the dimension and the Vectorize repair hint can only be changed in one place.
+  EMBEDDING_DIM: EMBEDDING_VECTOR_DIM,
 
   // ── Decision ledger (src/decisions/*, Track 7, T-0089.7.2) ──
   // D7.3: a decision's review date when neither review_by nor when is given.

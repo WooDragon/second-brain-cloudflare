@@ -14,6 +14,7 @@ import { ensureTenantBootstrap } from "../../src/lib/tenancy";
 import { createMember } from "../../src/lib/team-admin";
 import { resolveIdentityFromToken } from "../../src/lib/identity";
 import type { Env } from "../../src/env";
+import { DEFAULTS } from "../../src/config";
 
 const ctx = { waitUntil: (_: Promise<unknown>) => { void 0; } } as ExecutionContext;
 const ADMIN = "test-token";
@@ -108,7 +109,7 @@ beforeEach(async () => {
     }),
     AI: {
       run: vi.fn().mockImplementation(async (model: string, opts?: { stream?: boolean }) => {
-        if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+        if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
         if (opts?.stream) {
           const sse = (text: string) => new ReadableStream({
             start(c) {
@@ -589,7 +590,7 @@ describe("GET /digest — team scoping", () => {
     prompts.length = 0;
     env.AI = {
       run: vi.fn().mockImplementation(async (model: string, opts?: { stream?: boolean; messages?: { content: string }[] }) => {
-        if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+        if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
         if (opts?.stream) {
           prompts.push(String(opts?.messages?.[0]?.content ?? ""));
           const sse = (text: string) => new ReadableStream({

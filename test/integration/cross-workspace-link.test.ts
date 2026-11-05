@@ -36,6 +36,7 @@ import { createMember } from "../../src/lib/team-admin";
 import { resolveIdentityFromToken } from "../../src/lib/identity";
 import { CROSS_WORKSPACE_LINK_MESSAGE } from "../../src/graph/edges";
 import type { Env } from "../../src/env";
+import { DEFAULTS } from "../../src/config";
 
 const ctx = { waitUntil: (_: Promise<any>) => {} } as ExecutionContext;
 const BASE = "http://localhost";
@@ -299,7 +300,7 @@ describe("a link the system draws on capture lands in the capturer's own layer",
     });
     env.AI = {
       run: vi.fn().mockImplementation(async (model: string) => {
-        if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+        if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
         return sse('{"action":"contradiction","conflicting_id":"a-one","reason":"plan changed"}');
       }),
     } as unknown as Ai;
@@ -365,7 +366,7 @@ describe("a link the system draws on capture lands in the capturer's own layer",
     });
     env.AI = {
       run: vi.fn().mockImplementation(async (model: string) => {
-        if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+        if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
         return sse;
       }),
     } as unknown as Ai;

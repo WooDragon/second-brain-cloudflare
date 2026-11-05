@@ -56,7 +56,7 @@ import { ReplayStore, makeReplayAi } from "./ai-replay";
 import { CORE_DATA_DIR, buildCorpus } from "./corpus/build";
 import { loadCorpus } from "./corpus/loader";
 import { evaluateGate, findLosers } from "./gate";
-import { replayPaths } from "./corpora";
+import { CORE_CORPUS_EMBEDDING_MODEL, replayPaths } from "./corpora";
 import { runVariant } from "./runner";
 import type { VariantReport } from "./types";
 import { getVariant, registerVariant, unregisterVariant } from "./variants";
@@ -65,7 +65,7 @@ import { EVAL_FULL } from "./full";
 // Each gate evaluation resamples about 1,600 queries per metric and category; a loaded machine needs the room.
 vi.setConfig({ testTimeout: 30_000 });
 
-const MODEL = DEFAULTS.EMBEDDING_MODEL;
+const MODEL = CORE_CORPUS_EMBEDDING_MODEL;
 const COMMITTED = resolve(CORE_DATA_DIR, `replay.${MODEL.split("/").pop()}.jsonl.gz`);
 // read lists only files that exist (the committed layer plus any local cache), so this is what the runs below replay from.
 const cache = replayPaths(MODEL, "core-1k").read;

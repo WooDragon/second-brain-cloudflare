@@ -20,6 +20,7 @@ import {
   PROMPT_CAPSULE_MAX_ENTRY_ID_CHARS,
   PROMPT_CAPSULE_MAX_TAG_CHARS,
 } from "../../src/prompt-capsule/types";
+import { isEmbeddingCall } from "../helpers/embedding";
 
 const ctx = { waitUntil: (_promise: Promise<unknown>) => {} } as ExecutionContext;
 
@@ -1130,7 +1131,7 @@ describe("prompt capsule routes", () => {
   ): Ai {
     return {
       run: vi.fn().mockImplementation(async (model: string, opts: { messages?: { content: string }[] }) => {
-        if (model.startsWith("@cf/baai/bge")) return { data: [new Array(384).fill(0.1)] };
+        if (isEmbeddingCall(model)) return { data: [new Array(384).fill(0.1)] };
         const prompt = (opts?.messages ?? []).map(m => m.content).join("\n");
         const response = prompt.includes("Choose exactly one action")
           ? mergeResponse

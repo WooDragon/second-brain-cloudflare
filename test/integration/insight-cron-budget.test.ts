@@ -9,7 +9,7 @@ import { handleAdminRoutes } from "../../src/routes/admin";
 import { req } from "../helpers/make-request";
 import type { Env } from "../../src/env";
 import worker from "../../src/index";
-import { CONFIG_KEY } from "../../src/config";
+import { CONFIG_KEY, DEFAULTS } from "../../src/config";
 import { INSIGHT_TEAM_WEEKLY_CRON } from "../../src/insight/schedule";
 
 /**
@@ -54,7 +54,7 @@ function makeReasoningAI() {
   });
   return {
     run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       const prompt = String(opts?.messages?.[0]?.content ?? "");
       // Keyed off the candidate's own tier number so every accepted insight's
       // text — and therefore captureEntry's stored content — is distinct per
@@ -113,7 +113,7 @@ function makeDecliningAI(acceptFromTier: number) {
   ];
   return {
     run: vi.fn().mockImplementation(async (model: string, opts: any) => {
-      if (model === "@cf/baai/bge-small-en-v1.5") return { data: [new Array(384).fill(0.1)] };
+      if (model === DEFAULTS.EMBEDDING_MODEL) return { data: [new Array(384).fill(0.1)] };
       const prompt = String(opts?.messages?.[0]?.content ?? "");
       if (!prompt.includes("Memory A:")) return sse("3");
       const tier = Number(prompt.match(/tier (\d+)/)?.[1] ?? "0");

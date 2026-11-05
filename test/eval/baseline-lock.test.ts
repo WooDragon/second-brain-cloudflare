@@ -5,14 +5,14 @@ import { DEFAULTS } from "../../src/config";
 import { ReplayStore, makeReplayAi } from "./ai-replay";
 import { buildCorpus, CORE_DATA_DIR } from "./corpus/build";
 import { loadCorpus } from "./corpus/loader";
-import { replayPaths } from "./corpora";
+import { CORE_CORPUS_EMBEDDING_MODEL, replayPaths } from "./corpora";
 import { EVAL_FULL } from "./full";
 import { compareToLock } from "./lock";
 import { runVariant } from "./runner";
 import type { VariantReport } from "./types";
 import { getVariant } from "./variants";
 
-const MODEL = DEFAULTS.EMBEDDING_MODEL;
+const MODEL = CORE_CORPUS_EMBEDDING_MODEL;
 const LOCK = resolve(CORE_DATA_DIR, "../baselines", `core-1k.${MODEL.split("/").pop()}.json`);
 const cache = replayPaths(MODEL, "core-1k").read;
 
