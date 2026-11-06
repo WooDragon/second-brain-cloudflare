@@ -105,6 +105,13 @@ TS constant directly).
   89 test cases in one pass before this change; hardcoding the value in
   multiple places is exactly the failure mode this file exists to prevent).
 
+### 7. Proactive MCP capture guidance — `src/mcp/server.ts`
+
+The `remember` tool description owns the capture workflow. It is returned in
+`tools/list`, which exposes it to ChatGPT without a separate client instruction
+file. This patch changes guidance only. Capture still requires the client to
+invoke a write tool. Tool schemas and the write path stay the same.
+
 ## Rebase checklist
 
 When rebasing `downstream` onto a newer upstream commit, re-check these

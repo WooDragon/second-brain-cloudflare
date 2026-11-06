@@ -36,6 +36,17 @@ const volatilityParam = z
   .optional()
   .describe(VOLATILITY_DESCRIPTION);
 
+// DOWNSTREAM(memory-write): Tool descriptions reach clients through tools/list.
+const REMEMBER_DESCRIPTION =
+  "Save a concise memory when asked. Before each relevant reply, check for new reusable facts, preferences, decisions, plans or results and save them proactively."
+  + " If nothing is new, do not write. Honor opt-outs. Skip guesses, routine chatter, secrets and raw transcripts."
+  + " Attribute user reports and distinguish plans from completed results. In delegated work, only the designated writer saves."
+  + "\n\nBefore writing, use a focused recall or reuse this turn's search, then get plausible matches in full."
+  + " If lookup fails or the target is ambiguous, defer the write."
+  + " Use append for same-topic developments, update for a clear correction preserving unrelated facts and provenance, and remember for a new topic."
+  + " Verify a successful write by ID with get. If the outcome is unknown, check the ID or list_recent."
+  + " Do not repeat an uncertain write. A recall miss can reflect indexing lag.";
+
 export function buildMcpServer(env: Env, ctx: ExecutionContext): McpServer {
   const server = new McpServer({ name: "second-brain", version: "1.0.0" });
 
@@ -43,7 +54,7 @@ export function buildMcpServer(env: Env, ctx: ExecutionContext): McpServer {
   server.registerTool(
     "remember",
     {
-      description: "Store an idea, task, or note in your second brain. Call this automatically whenever the user shares context, goals, decisions, or preferences.",
+      description: REMEMBER_DESCRIPTION,
       inputSchema: {
         content: z.string().describe("The idea, task, or note to store"),
         tags: z.array(z.string()).optional().describe("Optional tags for filtering"),
